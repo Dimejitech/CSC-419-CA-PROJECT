@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './Appointments.module.css';
 import { Button } from '../../components';
+import { AppointmentCalendarModal } from '../../components/Modals';
 import avatar from '../../assets/avatar.png';
 
 interface UpcomingAppointment {
@@ -84,6 +85,14 @@ const CalendarPlusIcon: React.FC<{ size?: number }> = ({ size = 32 }) => (
 );
 
 export const Appointments: React.FC = () => {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const handleDateSelect = (date: Date) => {
+    // Handle the selected date (e.g., show confirmation, make API call)
+    console.log('Selected date:', date);
+    // You could add further logic here to book the appointment
+  };
+
   return (
     <div className={styles.container}>
       {/* Page Header */}
@@ -95,7 +104,7 @@ export const Appointments: React.FC = () => {
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Upcoming Appointments</h2>
-          <Button size="small">Book Appointment</Button>
+          <Button size="small" onClick={() => setIsCalendarOpen(true)}>Book Appointment</Button>
         </div>
 
         <div className={styles.upcomingCard}>
@@ -153,6 +162,13 @@ export const Appointments: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Appointment Calendar Modal */}
+      <AppointmentCalendarModal
+        isOpen={isCalendarOpen}
+        onClose={() => setIsCalendarOpen(false)}
+        onSelectDate={handleDateSelect}
+      />
     </div>
   );
 };

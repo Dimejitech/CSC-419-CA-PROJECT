@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './Home.module.css';
 import {
   CalendarIcon,
@@ -11,6 +11,7 @@ import {
   HeartIcon,
 } from '../../components';
 import { Button } from '../../components';
+import { AppointmentCalendarModal } from '../../components/Modals';
 
 interface QuickAction {
   title: string;
@@ -103,6 +104,14 @@ const EmptyNotificationIcon: React.FC<{ size?: number }> = ({ size = 60 }) => (
 );
 
 export const Home: React.FC = () => {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleDateSelect = (date: Date) => {
+    // Navigate to appointments page with selected date
+    navigate('/appointments', { state: { selectedDate: date } });
+  };
+
   return (
     <div className={styles.container}>
       {/* Page Header */}
@@ -166,12 +175,21 @@ export const Home: React.FC = () => {
                 <h4>{action.title}</h4>
                 <p>{action.description}</p>
               </div>
-              <Link
-                to={action.path}
-                className={action.isPrimary ? styles.quickActionButtonPrimary : styles.quickActionButton}
-              >
-                {action.buttonText}
-              </Link>
+              {action.isPrimary ? (
+                <button
+                  onClick={() => setIsCalendarOpen(true)}
+                  className={styles.quickActionButtonPrimary}
+                >
+                  {action.buttonText}
+                </button>
+              ) : (
+                <Link
+                  to={action.path}
+                  className={styles.quickActionButton}
+                >
+                  {action.buttonText}
+                </Link>
+              )}
             </div>
           ))}
         </div>
@@ -224,6 +242,13 @@ export const Home: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Appointment Calendar Modal */}
+      <AppointmentCalendarModal
+        isOpen={isCalendarOpen}
+        onClose={() => setIsCalendarOpen(false)}
+        onSelectDate={handleDateSelect}
+      />
     </div>
   );
 };
