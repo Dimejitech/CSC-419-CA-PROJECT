@@ -129,3 +129,26 @@ export const InfoIcon: React.FC<IconProps> = ({ size = 16, color = 'currentColor
     <circle cx="8" cy="5.33" r="0.67" fill={color}/>
   </svg>
 );
+
+export const HealthcareIcon: React.FC<IconProps> = ({ size = 24, color = 'currentColor', className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 2V5" stroke="url(#healthcare_gradient)" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M16 2V5" stroke="url(#healthcare_gradient)" strokeWidth="1.5" strokeLinecap="round"/>
+    <rect x="3" y="4" width="18" height="18" rx="2" stroke="url(#healthcare_gradient)" strokeWidth="1.5"/>
+    <path d="M3 9H21" stroke="url(#healthcare_gradient)" strokeWidth="1.5"/>
+    <path d="M12 13V17" stroke="url(#healthcare_gradient)" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M10 15H14" stroke="url(#healthcare_gradient)" strokeWidth="1.5" strokeLinecap="round"/>
+    <defs>
+      <linearGradient id="healthcare_gradient" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#03A5FF"/>
+        <stop offset="1" stopColor="#1FC16B"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+export const HeartIcon: React.FC<IconProps> = ({ size = 20, color = '#EF4444', className }) => (
+  <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.37 3.84C16.94 3.39 16.43 3.04 15.87 2.79C15.31 2.54 14.71 2.42 14.1 2.42C13.49 2.42 12.89 2.54 12.33 2.79C11.77 3.04 11.26 3.39 10.83 3.84L10 4.71L9.17 3.84C8.29 2.92 7.09 2.42 5.84 2.42C4.59 2.42 3.39 2.92 2.51 3.84C1.63 4.76 1.14 6 1.14 7.29C1.14 8.58 1.63 9.82 2.51 10.74L3.34 11.61L10 18.54L16.66 11.61L17.49 10.74C17.93 10.29 18.27 9.77 18.51 9.19C18.75 8.62 18.87 8 18.87 7.38C18.87 6.76 18.75 6.14 18.51 5.57C18.27 4.99 17.93 4.47 17.49 4.02L17.37 3.84Z" fill={color} stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);

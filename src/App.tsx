@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SignUp, SignIn, Prescriptions } from './pages';
+import { SignUp, SignIn, Home, Prescriptions, MedicalRecords, Appointments, Billing, LabResults, Profile } from './pages';
 import { DashboardLayout } from './layouts';
 import './styles/global.css';
 
@@ -28,16 +28,18 @@ function App() {
 
         {/* Dashboard Routes (with sidebar/header) */}
         <Route element={<DashboardLayout />}>
-          {/* Your implemented page */}
+          {/* Implemented pages */}
           <Route path="/prescriptions" element={<Prescriptions />} />
+          <Route path="/medical-records" element={<MedicalRecords />} />
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/lab-results" element={<LabResults />} />
+          <Route path="/profile" element={<Profile />} />
+
+          {/* Home route */}
+          <Route path="/" element={<Home />} />
 
           {/* Placeholder routes for teammates to implement */}
-          <Route path="/" element={<PlaceholderPage title="Home / Dashboard" />} />
-          <Route path="/appointments" element={<PlaceholderPage title="Appointments" />} />
-          <Route path="/medical-records" element={<PlaceholderPage title="Medical Records" />} />
-          <Route path="/lab-results" element={<PlaceholderPage title="Lab Results" />} />
-          <Route path="/billing" element={<PlaceholderPage title="Billing" />} />
-          <Route path="/profile" element={<PlaceholderPage title="Profile" />} />
           <Route path="/help" element={<PlaceholderPage title="Help / Support" />} />
         </Route>
 

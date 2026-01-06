@@ -20,4 +20,6 @@ export { Sidebar } from './Sidebar/Sidebar';
 
 export { Header } from './Header/Header';
 
+export { LogoutModal } from './Modals/LogoutModal';
+
 export * from './Icons';

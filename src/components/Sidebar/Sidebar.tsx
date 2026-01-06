@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import styles from './Sidebar.module.css';
 import {
   HomeIcon,
@@ -13,6 +13,7 @@ import {
   LogoutIcon,
   CollapseIcon,
 } from '../Icons';
+import { LogoutModal } from '../Modals/LogoutModal';
 
 interface NavItem {
   path: string;
@@ -20,6 +21,19 @@ interface NavItem {
   icon: React.ReactNode;
   badge?: boolean;
 }
+
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+// Close icon for mobile
+const CloseIcon: React.FC = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 6L6 18" stroke="#4A4A4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6 6L18 18" stroke="#4A4A4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 const mainNavItems: NavItem[] = [
   { path: '/', label: 'Home', icon: <HomeIcon /> },
@@ -35,13 +49,40 @@ const secondaryNavItems: NavItem[] = [
   { path: '/help', label: 'Help / Support', icon: <HelpIcon /> },
 ];
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
+  const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    navigate('/login');
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
+  const handleNavClick = () => {
+    // Close sidebar on mobile when clicking a nav item
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <aside className={styles.sidebar}>
+    <>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
       <div className={styles.header}>
         <div className={styles.headerContent}>
           <CollapseIcon />
           <span className={styles.headerTitle}>Navigation</span>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <CloseIcon />
+          </button>
         </div>
       </div>
 
@@ -56,6 +97,7 @@ export const Sidebar: React.FC = () => {
                   className={({ isActive }) =>
                     `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
                   }
+                  onClick={handleNavClick}
                 >
                   <span className={styles.navIcon}>{item.icon}</span>
                   <span className={styles.navLabel}>{item.label}</span>
@@ -76,6 +118,7 @@ export const Sidebar: React.FC = () => {
                   className={({ isActive }) =>
                     `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
                   }
+                  onClick={handleNavClick}
                 >
                   <span className={styles.navIcon}>{item.icon}</span>
                   <span className={styles.navLabel}>{item.label}</span>
@@ -87,12 +130,19 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       <div className={styles.footer}>
-        <button className={styles.logoutBtn}>
+        <button className={styles.logoutBtn} onClick={handleLogoutClick}>
           <LogoutIcon />
           <span>Logout</span>
         </button>
       </div>
     </aside>
+
+    <LogoutModal
+      isOpen={showLogoutModal}
+      onClose={handleLogoutCancel}
+      onConfirm={handleLogoutConfirm}
+    />
+    </>
   );
 };
 

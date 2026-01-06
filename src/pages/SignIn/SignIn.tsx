@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './SignIn.module.css';
 import { Button, Input, Logo } from '../../components';
 import signInBg from '../../assets/signin-bg.png';
@@ -10,6 +10,7 @@ interface SignInFormData {
 }
 
 export const SignIn: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<SignInFormData>({
     emailOrPhone: '',
     password: '',
@@ -50,6 +51,8 @@ export const SignIn: React.FC = () => {
     if (validateForm()) {
       console.log('Login submitted:', formData);
       // Handle login - integrate with your auth service
+      // Navigate to dashboard on successful login
+      navigate('/');
     }
   };
 

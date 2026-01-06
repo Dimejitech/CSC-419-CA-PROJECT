@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './SignUp.module.css';
 import { Button, Input, PhoneInput, Checkbox, Logo } from '../../components';
 import authBg from '../../assets/auth-bg.png';
@@ -14,6 +14,7 @@ interface SignUpFormData {
 }
 
 export const SignUp: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<SignUpFormData>({
     fullName: '',
     email: '',
@@ -78,6 +79,8 @@ export const SignUp: React.FC = () => {
     if (validateForm()) {
       console.log('Form submitted:', formData);
       // Handle form submission - integrate with your auth service
+      // Navigate to login page after successful registration
+      navigate('/login');
     }
   };
 
