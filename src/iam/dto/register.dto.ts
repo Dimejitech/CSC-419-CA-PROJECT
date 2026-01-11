@@ -1,16 +1,29 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class RegisterDto {
-  @IsString()
-  firstName!: string;
-
-  @IsString()
-  lastName!: string;
-
   @IsEmail()
   email!: string;
 
-  @IsString()
-  @MinLength(6)
+  @MinLength(8)
   password!: string;
+
+  @IsNotEmpty()
+  firstName!: string;
+
+  @IsNotEmpty()
+  lastName!: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  // MVP default role = Patient
+  @IsOptional()
+  role?: 'Patient' | 'Clinician' | 'LabTechnician' | 'Staff' | 'Admin';
 }
