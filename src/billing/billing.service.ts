@@ -11,8 +11,6 @@ import { UpdateInsuranceClaimDto } from './dto/update-insurance-claim.dto';
 export class BillingService {
   constructor(private prisma: PrismaService) {}
 
-  // --- INVOICE LOGIC ---
-
   async createInvoice(dto: CreateInvoiceDto) {
     return this.prisma.billing_invoices.create({
       data: {
@@ -24,26 +22,30 @@ export class BillingService {
     });
   }
 
+  // Logic for the missing patient history endpoint
+  async findPatientInvoices(patientId: string) {
+    return this.prisma.billing_invoices.findMany({
+      where: { patient_id: patientId },
+      include: { billing_line_items: true },
+    });
+  }
+
   async findAllInvoices(query: InvoiceQueryDto) {
-    const { patientId, status } = query;
     return this.prisma.billing_invoices.findMany({
       where: {
-        patient_id: patientId,
-        status: status,
+        patient_id: query.patientId,
+        status: query.status,
       },
-      orderBy: { created_at: 'desc' } as any, 
     });
   }
 
   async findOneInvoice(id: string) {
-    const invoice = await this.prisma.billing_invoices.findUnique({
+    const inv = await this.prisma.billing_invoices.findUnique({
       where: { id },
-      include: {
-        billing_line_items: true, // Includes the detailed charges
-      },
+      include: { billing_line_items: true },
     });
-    if (!invoice) throw new NotFoundException(`Invoice ${id} not found`);
-    return invoice;
+    if (!inv) throw new NotFoundException('Invoice not found');
+    return inv;
   }
 
   async updateInvoiceStatus(id: string, dto: UpdateInvoiceDto) {
@@ -53,32 +55,33 @@ export class BillingService {
     });
   }
 
-  // --- LINE ITEM LOGIC (Financial Transaction) ---
-
   async addLineItem(invoiceId: string, dto: CreateLineItemDto) {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Create the charge
       const item = await tx.billing_line_items.create({
-        data: {
-          invoice_id: invoiceId,
-          description: dto.description,
-          cost: dto.cost,
-        },
+        data: { invoice_id: invoiceId, description: dto.description, cost: dto.cost },
       });
-
-      // 2. Automatically update the Invoice total
       await tx.billing_invoices.update({
         where: { id: invoiceId },
-        data: {
-          total_amount: { increment: dto.cost },
-        },
+        data: { total_amount: { increment: dto.cost } },
       });
-
       return item;
     });
   }
 
-  // --- INSURANCE CLAIM LOGIC ---
+  // Logic for the missing delete endpoint (With math reversal)
+  async deleteLineItem(id: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const item = await tx.billing_line_items.findUnique({ where: { id } });
+      if (!item || !item.invoice_id) throw new NotFoundException('Item not found');
+
+      await tx.billing_invoices.update({
+        where: { id: item.invoice_id },
+        data: { total_amount: { decrement: item.cost } },
+      });
+
+      return tx.billing_line_items.delete({ where: { id } });
+    });
+  }
 
   async createInsuranceClaim(dto: CreateInsuranceClaimDto) {
     return this.prisma.insurance_claims.create({
@@ -87,7 +90,6 @@ export class BillingService {
         provider_name: dto.providerName,
         policy_number: dto.policyNumber,
         group_number: dto.groupNumber,
-        status: 'Submitted',
       },
     });
   }
@@ -95,18 +97,7 @@ export class BillingService {
   async updateInsuranceClaimStatus(id: string, dto: UpdateInsuranceClaimDto) {
     return this.prisma.insurance_claims.update({
       where: { id },
-      data: {
-        status: dto.status,
-        remarks: dto.remarks,
-      },
+      data: { status: dto.status, remarks: dto.remarks },
     });
-  }
-
-  async findInsuranceClaim(id: string) {
-    const claim = await this.prisma.insurance_claims.findUnique({
-      where: { id },
-    });
-    if (!claim) throw new NotFoundException(`Claim ${id} not found`);
-    return claim;
   }
 }
