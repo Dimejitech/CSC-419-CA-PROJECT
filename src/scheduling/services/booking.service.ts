@@ -7,6 +7,9 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
 import { UpdateBookingDto } from '../dto/update-booking.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AppointmentBookedEvent } from '../events/appointment-booked.event';
+import { AppointmentCancelledEvent } from '../events/appointment-cancelled.event';
 
 /**
  * BookingService - Domain Service for Appointment Booking Management
@@ -26,7 +29,10 @@ import { UpdateBookingDto } from '../dto/update-booking.dto';
  */
 @Injectable()
 export class BookingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+  private readonly prisma: PrismaService,
+  private readonly eventEmitter: EventEmitter2,
+) {}
 
   /**
    * Create a new appointment booking
@@ -46,6 +52,8 @@ export class BookingService {
     if (!patient) {
       throw new NotFoundException(`Patient with ID ${dto.patientId} not found`);
     }
+
+    
 
     // Verify slot exists and is available
     const slot = await this.prisma.appt_slots.findUnique({
@@ -246,7 +254,7 @@ export class BookingService {
     }
 
     // Get slot time range
-    let slotTimes = null;
+    let slotTimes: { startTime: string | null; endTime: string | null } | null = null;
     if (booking.slot_id) {
       const timeRange = await this.prisma.$queryRaw<Array<any>>`
         SELECT 
