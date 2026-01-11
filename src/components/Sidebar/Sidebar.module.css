@@ -88,7 +88,7 @@
 }
 
 .navItem:hover {
-  background-color: rgba(87, 189, 255, 0.1);
+  /* Hover effect removed */
 }
 
 .navItemActive {

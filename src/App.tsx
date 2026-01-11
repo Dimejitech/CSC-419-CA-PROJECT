@@ -1,5 +1,23 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SignUp, SignIn, Home, Prescriptions, MedicalRecords, Appointments, Billing, LabResults, Profile } from './pages';
+import {
+  SignUp,
+  SignIn,
+  Home,
+  Prescriptions,
+  MedicalRecords,
+  Appointments,
+  Billing,
+  LabResults,
+  Profile,
+  ClinicianSignIn,
+  ClinicianSignUp,
+  ClinicianDashboard,
+  ClinicianLabs,
+  ClinicianPatients,
+  ClinicianAppointments,
+  ClinicianProfile,
+  ClinicianProfileSecurity,
+} from './pages';
 import { DashboardLayout } from './layouts';
 import './styles/global.css';
 
@@ -22,11 +40,23 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Authentication Routes (no sidebar/header) */}
+        {/* Patient Authentication Routes (no sidebar/header) */}
         <Route path="/login" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
 
-        {/* Dashboard Routes (with sidebar/header) */}
+        {/* Clinician Authentication Routes (no sidebar/header) */}
+        <Route path="/clinician/signin" element={<ClinicianSignIn />} />
+        <Route path="/clinician/signup" element={<ClinicianSignUp />} />
+
+        {/* Clinician Dashboard Routes (each page has its own embedded sidebar/header) */}
+        <Route path="/clinician/dashboard" element={<ClinicianDashboard />} />
+        <Route path="/clinician/labs" element={<ClinicianLabs />} />
+        <Route path="/clinician/patients" element={<ClinicianPatients />} />
+        <Route path="/clinician/appointments" element={<ClinicianAppointments />} />
+        <Route path="/clinician/profile" element={<ClinicianProfile />} />
+        <Route path="/clinician/profile/security" element={<ClinicianProfileSecurity />} />
+
+        {/* Patient Dashboard Routes (with sidebar/header) */}
         <Route element={<DashboardLayout />}>
           {/* Implemented pages */}
           <Route path="/prescriptions" element={<Prescriptions />} />

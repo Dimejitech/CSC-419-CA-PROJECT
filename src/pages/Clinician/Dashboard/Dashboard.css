@@ -1,0 +1,1209 @@
+/* =========================
+   Dashboard.css - Clean Complete Version
+   Matches screenshot with Labs sidebar
+   ========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================
+   Main Layout
+   ========================= */
+
+.labs-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter,
+    Helvetica, Arial, sans-serif;
+}
+
+/* =========================
+   Top Bar
+   ========================= */
+
+.labs-topbar {
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.labs-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.labs-logoImage {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.labs-brandName {
+  font-weight: 700;
+  font-size: 20px;
+  color: #0ea5e9;
+  letter-spacing: 0.2px;
+}
+
+.labs-search {
+  width: min(520px, 50vw);
+  position: relative;
+}
+
+.labs-searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.labs-searchInput {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0 14px 0 42px;
+  outline: none;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+}
+
+.labs-searchInput::placeholder {
+  color: #9ca3af;
+}
+
+.labs-topRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 260px;
+  justify-content: flex-end;
+}
+
+.labs-iconBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  position: relative;
+  color: #111827;
+}
+
+.labs-bellImg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+}
+
+.labs-dot {
+  position: absolute;
+  right: 9px;
+  top: 9px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+
+.labs-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.labs-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e7eb;
+  display: grid;
+  place-items: center;
+}
+
+.labs-avatarImg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.labs-userMeta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.labs-userName {
+  font-weight: 700;
+  font-size: 14px;
+  color: #111827;
+}
+
+.labs-userRole {
+  font-size: 12px;
+  color: #0ea5e9;
+  margin-top: 3px;
+}
+
+/* =========================
+   Body Layout
+   ========================= */
+
+.labs-body {
+  display: flex;
+  min-height: calc(100vh - 78px);
+  background: #f3f4f6;
+}
+
+/* =========================
+   Sidebar
+   ========================= */
+
+.labs-sidebar {
+  width: 320px;
+  padding: 16px;
+  background: #f3f4f6;
+  display: flex;
+  justify-content: center;
+}
+
+.labs-sidebarBox {
+  width: 292px;
+  min-height: calc(100vh - 110px);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 
+    0 6px 18px rgba(17, 24, 39, 0.06),
+    0 2px 6px rgba(17, 24, 39, 0.04);
+}
+
+.labs-navHeader {
+  padding: 12px 0;
+  margin-bottom: 12px;
+}
+
+.labs-navHeaderPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.labs-navHeaderCollapse {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  object-fit: contain;
+}
+
+.labs-navHeaderTitle {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.2;
+  background: linear-gradient(90deg, #22c55e 0%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.3px;
+}
+
+.labs-sectionTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 16px 0 12px 12px;
+}
+
+.labs-mt24 {
+  margin-top: 24px;
+}
+
+.labs-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.labs-navItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  transition: background 0.2s ease, color 0.2s ease;
+  text-align: left;
+}
+
+.labs-navItemIcon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.labs-navItemIcon svg {
+  width: 20px;
+  height: 20px;
+  stroke: #374151 !important;
+  display: block;
+}
+
+.labs-navItem--active .labs-navItemIcon svg {
+  stroke: #ffffff !important;
+}
+
+.labs-navItem--active .labs-navItemIcon img {
+  filter: brightness(0) invert(1) !important;
+}
+
+.labs-navImg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  object-fit: contain;
+}
+
+.labs-navItem:hover {
+  /* Hover effect removed */
+}
+
+.labs-navItem--active {
+  background-color: #00BFFF;
+  color: #ffffff;
+}
+
+.labs-navItem--active .labs-navItemIcon {
+  opacity: 1;
+}
+
+.labs-logout {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: #ef4444;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 12px 8px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.labs-logout:hover {
+  background: #fee2e2;
+}
+
+.labs-logoutIcon {
+  width: 20px;
+  display: grid;
+  place-items: center;
+}
+
+.labs-logoutImg {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+/* =========================
+   Main Content Area
+   ========================= */
+
+.labs-content {
+  flex: 1;
+  padding: 26px 28px;
+  background: #f3f4f6;
+}
+
+.dashboard-content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 6px 0;
+  line-height: 1.1;
+}
+
+.page-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* =========================
+   Dashboard Grid
+   ========================= */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+  align-items: start;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* =========================
+   Card Base Styles
+   ========================= */
+
+.card {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #00a8e8;
+  margin: 0;
+}
+
+.card-title-plain {
+  font-size: 18px;
+  font-weight: 600;
+  color: #4b5563;
+  margin: 0 0 16px 0;
+}
+
+/* =========================
+   Upcoming Appointment
+   ========================= */
+
+.upcoming-appointment {
+  padding: 20px;
+}
+
+.appointment-icon-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.appointment-details {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.appointment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.appointment-date-time {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.appointment-separator {
+  color: #9ca3af;
+}
+
+.appointment-patient {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.appointment-department {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.appointment-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary {
+  padding: 10px 16px;
+  background-color: #00a8e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #0090c7;
+}
+
+.btn-secondary {
+  padding: 10px 16px;
+  background-color: #ffffff;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* =========================
+   Quick Actions
+   ========================= */
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.action-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.action-icon {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.schedule-icon {
+  background-color: #dbeafe;
+  padding: 16px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.patients-icon {
+  background-color: #dcfce7;
+  padding: 16px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.lab-icon {
+  background-color: #fef3c7;
+  padding: 16px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.action-icon-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.action-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.action-description {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+.action-button {
+  padding: 10px 20px;
+  background-color: #00a8e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.action-button:hover {
+  background-color: #0090c7;
+}
+
+.action-button-secondary {
+  padding: 10px 20px;
+  background-color: #ffffff;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.action-button-secondary:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* =========================
+   Payment History
+   ========================= */
+
+.payment-history {
+  padding: 0;
+  overflow: hidden;
+}
+
+.payment-history .card-title-plain {
+  padding: 18px 24px 14px 24px;
+  margin: 0;
+}
+
+.payment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.payment-table thead th {
+  background: #f8fbff;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.payment-table tbody td {
+  font-size: 14px;
+  color: #6b7280;
+  padding: 18px 24px;
+  border-bottom: 1px solid #ededed;
+  vertical-align: middle;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-badge.stable {
+  background-color: #9fe7c4;
+  color: #2f7a57;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.critical {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.action-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3b82f6;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.action-link:hover {
+  text-decoration: underline;
+}
+
+.view-all-link {
+  width: 100%;
+  text-align: left;
+  display: block;
+  padding: 14px 24px 16px 24px;
+  border-top: 1px solid #ededed;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3b82f6;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.view-all-link:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   Notifications
+   ========================= */
+
+.notifications {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+.notifications .card-title {
+  background: linear-gradient(90deg, #03A5FF 0%, #1FC16B 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.empty-bell-img {
+  width: 80px;
+  height: 80px;
+  opacity: 0.2;
+  margin-bottom: 16px;
+  object-fit: contain;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* =========================
+   Recent Lab Results
+   ========================= */
+
+.lab-results {
+  min-height: 460px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lab-results .card-title {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.1;
+  background: linear-gradient(90deg, #03A5FF 0%, #1FC16B 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 8px;
+}
+
+.lab-result-item {
+  margin-bottom: 16px;
+}
+
+.lab-result-item:last-child {
+  margin-bottom: 0;
+}
+
+.lab-result-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.lab-result-info {
+  margin-bottom: 12px;
+}
+
+.lab-result-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.lab-result-patient,
+.lab-result-id {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 14px 0 16px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.review-report-link {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #00a8e8;
+  text-decoration: none;
+  margin-top: 4px;
+}
+
+.review-report-link:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   Responsive Design
+   ========================= */
+
+@media (max-width: 1400px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 340px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .labs-sidebar {
+    display: none;
+  }
+
+  .labs-search {
+    width: min(420px, 45vw);
+  }
+}
+
+@media (max-width: 768px) {
+  .labs-topbar {
+    padding: 0 16px;
+  }
+
+  .labs-content {
+    padding: 18px 16px;
+  }
+
+  .dashboard-grid {
+    gap: 16px;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   FORCE the 3 action boxes to be horizontal
+   ========================= */
+
+.quick-actions{
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 20px !important;
+  align-items: stretch;
+}
+
+.quick-actions > .action-card{
+  width: 100%;
+  min-width: 0;
+}
+
+/* optional: keep them 3 in a row until the screen is small */
+@media (max-width: 900px){
+  .quick-actions{
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* =========================
+   Quick Action icon IMAGES (override)
+   Paste at bottom of Dashboard.css
+   ========================= */
+
+/* Remove old SVG / colored icon box styles */
+.schedule-icon,
+.patients-icon,
+.lab-icon{
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Icon wrapper */
+.action-icon{
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image icons */
+.action-icon img{
+  width: 36px;      /* change to 40px if you want them bigger */
+  height: 36px;
+  object-fit: contain;
+  display: block;
+}
+
+
+/* =========================
+   Quick Action Icons – Small bordered style
+   ========================= */
+
+/* Icon container */
+.action-icon{
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  background: #ffffff;
+}
+
+/* Icon images */
+.action-icon img{
+  width: 18px;   /* smaller icon */
+  height: 18px;
+  object-fit: contain;
+}
+
+/* Blue – Schedule */
+.schedule-icon{
+  border: 1.5px solid #38BDF8; /* sky blue */
+}
+
+/* Green – Patients */
+.patients-icon{
+  border: 1.5px solid #34D399; /* emerald */
+}
+
+/* Orange – Lab */
+.lab-icon{
+  border: 1.5px solid #FBBF24; /* amber */
+}
+
+/* =========================
+   Payment History – increase box size
+   ========================= */
+
+/* Make the whole card taller */
+.payment-history{
+  padding-bottom: 28px;          /* more breathing room */
+}
+
+/* Increase table row height */
+.payment-table tbody td{
+  padding-top: 26px;
+  padding-bottom: 26px;
+}
+
+/* Header row slightly taller */
+.payment-table thead th{
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+/* Space above "View All Payments" */
+.view-all-link{
+  margin-top: 8px;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+/* Optional: soften card edges like screenshot */
+.payment-history{
+  border-radius: 16px;
+}
+
+
+/* =========================
+   Align Notifications box with page header
+   ========================= */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+  align-items: start;
+  margin-top: 0; /* Remove any top margin */
+}
+
+.right-column {
+  margin-top: -80px; /* Pull the notifications up to align with header */
+  padding-top: 0;
+}
+
+/* Ensure the left column doesn't move */
+.left-column {
+  margin-top: 0;
+}
+
+/* Alternative: More precise control */
+.notifications {
+  margin-top: 0;
+}
+
+/* =========================
+   Make Notifications box smaller to match Upcoming Appointment height
+   ========================= */
+
+/* =========================
+   Increase Notifications box size
+   ========================= */
+
+/* =========================
+   Reduce Notifications box size slightly
+   ========================= */
+
+.notifications {
+  min-height: auto;
+  height: 320px; /* Reduced from 340px */
+}
+
+.notifications .empty-state {
+  padding: 35px 20px;
+}
+.empty-bell-img {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 12px;
+}
+
+.empty-text {
+  font-size: 13px;
+}
+
+/* =========================
+   Increase Recent Lab Results box to match Payment History height
+   ========================= */
+
+/* =========================
+   Increase Lab Results box size more
+   ========================= */
+
+.lab-results {
+  min-height: 635px; /* Increased from 620px */
+  padding: 20px;
+}
+
+.lab-result-card {
+  min-height: 235px;
+  padding: 22px;
+}
+
+/* Adjust spacing between lab result cards */
+.lab-result-item {
+  margin-bottom: 20px;
+}
+
+
+/* =========================
+   Reduce width of right column (Notifications & Lab Results)
+   ========================= */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px; /* Reduced from 360px */
+  gap: 20px;
+  align-items: start;
+}
+
+
+/* =========================
+   Style Upcoming Appointment header with blue-green gradient
+   ========================= */
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.upcoming-appointment .card-title {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #03A5FF 0%, #1FC16B 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+/* Style the calendar icon with gradient */
+.appointment-icon-svg {
+  width: 32px;
+  height: 32px;
+}
+
+.appointment-icon-svg rect:first-child {
+  fill: url(#appointmentGradient);
+  fill-opacity: 0.15;
+}
+
+.appointment-icon-svg rect:nth-child(2),
+.appointment-icon-svg path {
+  stroke: url(#appointmentGradient);
+}
+
+/* =========================
+   Move Upcoming Appointment header to left with icon
+   ========================= */
+
+.upcoming-appointment .card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  justify-content: flex-start;
+}
+
+.appointment-icon-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  order: -1; /* Ensures icon comes first */
+}
+
+.upcoming-appointment .card-title {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #03A5FF 0%, #1FC16B 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+/* =========================
+   CityCare Logo - Blue Green Gradient
+   ========================= */
+
+.labs-brandName {
+  font-weight: 700;
+  font-size: 20px;
+  background: linear-gradient(90deg, #03A5FF 0%, #1FC16B 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.2px;
+}
+
+.labs-logoImage {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}

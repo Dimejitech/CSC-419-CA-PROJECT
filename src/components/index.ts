@@ -18,6 +18,8 @@ export type { LogoProps } from './Logo/Logo';
 
 export { Sidebar } from './Sidebar/Sidebar';
 
+export { ClinicianSidebar } from './ClinicianSidebar/ClinicianSidebar';
+
 export { Header } from './Header/Header';
 
 export { LogoutModal } from './Modals/LogoutModal';
