@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ClinicalController } from './clinical.controller';
 import { ClinicalService } from './clinical.service';
-import { PrismaModule } from '../prisma/prisma.module';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [EventEmitterModule.forRoot()],
   controllers: [ClinicalController],
-  providers: [ClinicalService],
-  exports: [ClinicalService],
+  providers: [ClinicalService, PrismaService],
+  exports: [ClinicalService, PrismaService],
 })
 export class ClinicalModule {}

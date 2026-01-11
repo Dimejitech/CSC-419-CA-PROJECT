@@ -7,12 +7,18 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Delete,
+  Patch,
 } from '@nestjs/common';
 import { ClinicalService } from './clinical.service';
 import { CreateEncounterDto } from './dto/create-encounter.dto';
 import { UpdateEncounterDto } from './dto/update-encounter.dto';
 import { CreateSoapNoteDto } from './dto/create-soap-note.dto';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto';
+import { Query } from '@nestjs/common';
+import { CreateChartDto } from './dto/create-chart.dto';
+import { UpdateChartDto } from './dto/update-chart.dto';
+import { CreateAllergyDto } from './dto/create-allergy.dto';
 
 @Controller('clinical')
 export class ClinicalController {
@@ -30,6 +36,82 @@ export class ClinicalController {
   async getPatientChart(@Param('id') id: string) {
     return this.clinicalService.getPatientChart(id);
   }
+
+  /**
+ * GET /clinical/patients
+ * Search for patients by name, email, or phone
+ */
+@Get('patients')
+async searchPatients(@Query('query') query: string) {
+  return this.clinicalService.searchPatients(query);
+}
+
+/**
+ * POST /clinical/patients/:id/chart
+ * Create a patient chart
+ */
+@Post('patients/:id/chart')
+@HttpCode(HttpStatus.CREATED)
+async createChart(@Param('id') id: string, @Body() createChartDto: CreateChartDto) {
+  // Override the patientId from the URL parameter
+  createChartDto.patientId = id;
+  return this.clinicalService.createChart(createChartDto);
+}
+
+/**
+ * PATCH /clinical/patients/:id/chart
+ * Update patient chart
+ */
+@Patch('patients/:id/chart')
+async updateChart(@Param('id') id: string, @Body() updateChartDto: UpdateChartDto) {
+  return this.clinicalService.updateChart(id, updateChartDto);
+}
+
+/**
+ * GET /clinical/charts/:chartId/allergies
+ * Get all allergies for a chart
+ */
+@Get('charts/:chartId/allergies')
+async getAllergies(@Param('chartId') chartId: string) {
+  return this.clinicalService.getAllergies(chartId);
+}
+
+/**
+ * POST /clinical/charts/:chartId/allergies
+ * Add an allergy to a chart
+ */
+@Post('charts/:chartId/allergies')
+@HttpCode(HttpStatus.CREATED)
+async addAllergy(@Param('chartId') chartId: string, @Body() createAllergyDto: CreateAllergyDto) {
+  return this.clinicalService.addAllergy(chartId, createAllergyDto);
+}
+
+/**
+ * DELETE /clinical/allergies/:allergyId
+ * Remove an allergy
+ */
+@Delete('allergies/:allergyId')
+async removeAllergy(@Param('allergyId') allergyId: string) {
+  return this.clinicalService.removeAllergy(allergyId);
+}
+
+/**
+ * GET /clinical/charts/:chartId/encounters
+ * Get all encounters for a chart
+ */
+@Get('charts/:chartId/encounters')
+async getChartEncounters(@Param('chartId') chartId: string) {
+  return this.clinicalService.getChartEncounters(chartId);
+}
+
+/**
+ * GET /clinical/charts/:chartId/prescriptions
+ * Get all prescriptions for a chart
+ */
+@Get('charts/:chartId/prescriptions')
+async getChartPrescriptions(@Param('chartId') chartId: string) {
+  return this.clinicalService.getChartPrescriptions(chartId);
+}
 
   // ============================================
   // ENCOUNTER ENDPOINTS
@@ -75,6 +157,17 @@ export class ClinicalController {
    * Add or update SOAP notes for an encounter
    */
   @Post('encounters/:id/notes')
+  /**
+ * PATCH /clinical/encounters/:id/notes
+ * Update SOAP notes for an encounter (same as POST, updates existing)
+ */
+@Patch('encounters/:id/notes')
+async updateSoapNote(
+  @Param('id') id: string,
+  @Body() createSoapNoteDto: CreateSoapNoteDto,
+) {
+  return this.clinicalService.createSoapNote(id, createSoapNoteDto);
+}
   @HttpCode(HttpStatus.CREATED)
   async createSoapNote(
     @Param('id') id: string,
