@@ -1,24 +1,24 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import { SignOptions } from 'jsonwebtoken';
-import type { StringValue } from 'ms';
-import {
-  ConflictException,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { RegisterDto } from './dto/register.dto';
-
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PatientRegisteredEvent } from './events/patient-registered.event';
 
 @Injectable()
 export class IamService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
-  async register(data: RegisterDto) {
+  async register(data: any) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-  
+
     try {
       const user = await this.prisma.users.create({
         data: {
@@ -27,68 +27,64 @@ export class IamService {
           first_name: data.firstName,
           last_name: data.lastName,
         },
-        select: {
-          id: true,
-          email: true,
-        },
       });
-  
-      return user;
-    } catch (error: unknown) {
-      
-      if (error instanceof PrismaClientKnownRequestError) {
 
-        if (error.code === 'P2002') {
-          throw new ConflictException('Email already exists');
-        }
-      }
-  
-      throw new InternalServerErrorException('Registration failed');
+      // ✅ Emit event
+      this.eventEmitter.emit(
+        'patient.registered',
+        new PatientRegisteredEvent(user.id),
+      );
+
+      return { id: user.id, email: user.email };
+    } catch {
+      throw new ConflictException('Email already exists');
     }
   }
-  
-  
 
-  
   async login(email: string, password: string) {
-    const user = await this.prisma.users.findUnique({
-      where: { email },
-    });
+    const user = await this.prisma.users.findUnique({ where: { email } });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!user) throw new UnauthorizedException();
 
-    const passwordMatch = await bcrypt.compare(
-      password,
-      user.password_hash,
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) throw new UnauthorizedException();
+
+    const accessToken = jwt.sign(
+      { sub: user.id },
+      process.env.JWT_SECRET!,
+      { expiresIn: '15m' },
     );
 
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    
-    const jwtOptions: SignOptions = {
-      expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as StringValue,
-    };
-    
-
-    const token = jwt.sign(
-      {
-        sub: user.id,
-        email: user.email,
-      },
-      process.env.JWT_SECRET as string,
-      jwtOptions,
+    const refreshToken = jwt.sign(
+      { sub: user.id },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' },
     );
 
     return {
-      accessToken: token,
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      },
     };
   }
 
-  
+  async refreshToken(token: string) {
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    const accessToken = jwt.sign(
+      { sub: payload.sub },
+      process.env.JWT_SECRET!,
+      { expiresIn: '15m' },
+    );
+
+    return { accessToken };
+  }
+
   async getMe(userId: string) {
     return this.prisma.users.findUnique({
       where: { id: userId },

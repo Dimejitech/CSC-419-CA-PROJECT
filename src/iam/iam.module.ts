@@ -1,25 +1,16 @@
 import { Module } from '@nestjs/common';
-import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
-import type { StringValue } from 'ms';
-
-import { IamController } from './iam.controller';
 import { IamService } from './iam.service';
+import { IamController } from './iam.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { PassportModule } from '@nestjs/passport';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET as string,
-      signOptions: {
-        expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as StringValue,
-      },
-    }),
+    PassportModule,
+    EventEmitterModule.forRoot(),
   ],
-  controllers: [IamController],
   providers: [IamService, JwtStrategy],
-  exports: [PassportModule],
+  controllers: [IamController],
 })
 export class IamModule {}
-
