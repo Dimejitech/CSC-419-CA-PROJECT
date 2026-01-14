@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Dashboard.css';
 import { useAuth } from '../../../context';
-import { schedulingAPI, labAPI } from '../../../services/api';
+import { schedulingAPI, labAPI, notificationAPI } from '../../../services/api';
 import cityCareLogoColored from '../../../assets/cityCarelogoColored.png';
 
 interface Booking {
@@ -43,6 +43,17 @@ interface LabResult {
       };
     };
   };
+}
+
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  reference_id?: string;
+  reference_type?: string;
 }
 
 // Calendar icon component
@@ -107,6 +118,8 @@ const Dashboard: React.FC = () => {
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [appointments, setAppointments] = useState<Booking[]>([]);
   const [labResults, setLabResults] = useState<LabResult[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -118,18 +131,17 @@ const Dashboard: React.FC = () => {
       const startDate = new Date().toISOString();
       const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const scheduleData = await schedulingAPI.getClinicianSchedule(
-        user.id,
-        startDate,
-        endDate
-      ).catch(() => []);
+      const [scheduleData, labData, notificationsData] = await Promise.all([
+        schedulingAPI.getClinicianSchedule(user.id, startDate, endDate).catch(() => []),
+        labAPI.getUnverifiedResults().catch(() => []),
+        notificationAPI.getNotifications(10).catch(() => ({ notifications: [], unreadCount: 0 })),
+      ]);
 
       console.log('[ClinicianDashboard] Fetched schedule:', scheduleData);
       setAppointments(scheduleData || []);
-
-      // Fetch unverified lab results for this clinician
-      const labData = await labAPI.getUnverifiedResults().catch(() => []);
       setLabResults(labData || []);
+      setNotifications(notificationsData?.notifications || []);
+      setUnreadCount(notificationsData?.unreadCount || 0);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -141,6 +153,43 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData, location.key]);
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await notificationAPI.markAsRead(notificationId);
+      setNotifications(notifications.map(n =>
+        n.id === notificationId ? { ...n, is_read: true } : n
+      ));
+      setUnreadCount(Math.max(0, unreadCount - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationAPI.markAllAsRead();
+      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const formatNotificationTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -258,10 +307,7 @@ const Dashboard: React.FC = () => {
                 type="button"
               >
                 <span className="dashboard-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9,22 9,12 15,12 15,22"/>
-                  </svg>
+                  <img className="dashboard-navImg" src="/images/home.png" alt="" />
                 </span>
                 Home
               </button>
@@ -272,10 +318,7 @@ const Dashboard: React.FC = () => {
                 type="button"
               >
                 <span className="dashboard-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/>
-                    <path d="M16 2v4M8 2v4M3 10h18"/>
-                  </svg>
+                  <img className="dashboard-navImg" src="/images/appointments.png" alt="" />
                 </span>
                 Appointments
               </button>
@@ -286,12 +329,7 @@ const Dashboard: React.FC = () => {
                 type="button"
               >
                 <span className="dashboard-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
+                  <img className="dashboard-navImg" src="/images/patients.png" alt="" />
                 </span>
                 Patients
               </button>
@@ -302,10 +340,7 @@ const Dashboard: React.FC = () => {
                 type="button"
               >
                 <span className="dashboard-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 3h6v6l3 9H6l3-9V3z"/>
-                    <path d="M9 3h6"/>
-                  </svg>
+                  <img className="dashboard-navImg" src="/images/labs.png" alt="" />
                 </span>
                 Labs
               </button>
@@ -320,21 +355,14 @@ const Dashboard: React.FC = () => {
                 type="button"
               >
                 <span className="dashboard-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="7" r="4"/>
-                    <path d="M5.5 21a8.5 8.5 0 0 1 13 0"/>
-                  </svg>
+                  <img className="dashboard-navImg" src="/images/profile.png" alt="" />
                 </span>
                 Profile
               </button>
 
               <button className="dashboard-navItem" type="button">
                 <span className="dashboard-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
+                  <img className="dashboard-navImg" src="/images/help-circle.png" alt="" />
                 </span>
                 Help / Support
               </button>
@@ -484,11 +512,42 @@ const Dashboard: React.FC = () => {
               <div className="dashboard-right">
                 {/* Notifications */}
                 <section className="dashboard-card notifications-card">
-                  <h2 className="card-title-gradient">Notifications</h2>
-                  <div className="empty-state">
-                    <EmptyBellIcon />
-                    <p className="empty-text">You have no notifications</p>
+                  <div className="notifications-header-row">
+                    <h2 className="card-title-gradient">
+                      Notifications
+                      {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
+                    </h2>
+                    {notifications.length > 0 && unreadCount > 0 && (
+                      <button className="mark-all-read-btn" onClick={handleMarkAllAsRead}>
+                        Mark all read
+                      </button>
+                    )}
                   </div>
+                  {notifications.length === 0 ? (
+                    <div className="empty-state">
+                      <EmptyBellIcon />
+                      <p className="empty-text">You have no notifications</p>
+                    </div>
+                  ) : (
+                    <div className="notifications-list">
+                      {notifications.slice(0, 5).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`notification-item ${!notification.is_read ? 'unread' : ''}`}
+                          onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                        >
+                          <div className="notification-content">
+                            <p className="notification-title">{notification.title}</p>
+                            <p className="notification-message">{notification.message}</p>
+                            <span className="notification-time">
+                              {formatNotificationTime(notification.created_at)}
+                            </span>
+                          </div>
+                          {!notification.is_read && <span className="unread-dot" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </section>
 
                 {/* Recent Lab Results */}

@@ -22,7 +22,6 @@ export {
   ClinicianPatients,
   ClinicianAppointments,
   ClinicianProfile,
-  ClinicianProfileSecurity,
 } from './Clinician';
 
 // Placeholder pages for teammates to implement

@@ -40,11 +40,18 @@ interface PatientDetails {
 
 const Patients: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<PatientDetails | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [prescriptionForm, setPrescriptionForm] = useState({ medication: '', dosage: '', frequency: '', duration: '' });
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showAllPrescriptions, setShowAllPrescriptions] = useState(false);
+  const [prescriptionLoading, setPrescriptionLoading] = useState(false);
+  const [prescriptionError, setPrescriptionError] = useState<string | null>(null);
+  const [prescriptionSuccess, setPrescriptionSuccess] = useState(false);
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -125,6 +132,68 @@ const Patients: React.FC = () => {
       setPatients(results || []);
     } catch (error) {
       console.error('Error searching patients:', error);
+    }
+  };
+
+  const handleCreatePrescription = async () => {
+    if (!selectedPatient?.id) return;
+    if (!prescriptionForm.medication || !prescriptionForm.dosage || !prescriptionForm.frequency) {
+      setPrescriptionError('Please fill in all required fields');
+      return;
+    }
+
+    setPrescriptionLoading(true);
+    setPrescriptionError(null);
+    setPrescriptionSuccess(false);
+
+    try {
+      // Get patient chart
+      const chart = await clinicalAPI.getPatientChart(selectedPatient.id);
+      if (!chart?.id) {
+        throw new Error('Patient chart not found');
+      }
+
+      // Get existing encounters or create a new one
+      let encounterId: string;
+      const encounters = await clinicalAPI.getChartEncounters(chart.id).catch(() => []);
+
+      // Use the most recent open encounter or create a new one
+      const openEncounter = encounters.find((e: any) => e.status === 'Open');
+      if (openEncounter) {
+        encounterId = openEncounter.id;
+      } else {
+        // Create a new encounter for this prescription
+        const newEncounter = await clinicalAPI.createEncounter({
+          chartId: chart.id,
+          clinicianId: user?.id,
+        });
+        encounterId = newEncounter.id;
+      }
+
+      // Create the prescription
+      await clinicalAPI.createPrescription(encounterId, {
+        medicationName: prescriptionForm.medication,
+        dosage: prescriptionForm.dosage,
+        frequency: prescriptionForm.frequency,
+        duration: prescriptionForm.duration || undefined,
+      });
+
+      setPrescriptionSuccess(true);
+      setPrescriptionForm({ medication: '', dosage: '', frequency: '', duration: '' });
+
+      // Reload patient details to show the new prescription
+      await loadPatientDetails(selectedPatient.id);
+
+      // Close modal after a short delay
+      setTimeout(() => {
+        setShowPrescriptionModal(false);
+        setPrescriptionSuccess(false);
+      }, 1500);
+    } catch (error: any) {
+      console.error('Error creating prescription:', error);
+      setPrescriptionError(error.response?.data?.message || 'Failed to create prescription. Please try again.');
+    } finally {
+      setPrescriptionLoading(false);
     }
   };
 
@@ -256,7 +325,7 @@ const Patients: React.FC = () => {
               </button>
             </nav>
 
-            <button className="labs-logout" type="button" onClick={() => handleNavigation('/clinician/signin')}>
+            <button className="labs-logout" type="button" onClick={() => { logout(); navigate('/clinician/signin'); }}>
               <span className="labs-logoutIcon">
                 <img className="labs-logoutImg" src="/images/log-out.png" alt="" />
               </span>
@@ -353,13 +422,20 @@ const Patients: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <div className="patient-actions">
-                        <button className="icon-btn" onClick={() => alert('Edit patient details')}>
+                      <div className="patient-actions" style={{ position: 'relative' }}>
+                        <button className="icon-btn" onClick={() => navigate('/clinician/profile')} title="View patient profile">
                           <img src="/images/edit-icon.png" alt="Edit" className="action-icon" />
                         </button>
-                        <button className="icon-btn" onClick={() => alert('More options')}>
+                        <button className="icon-btn" onClick={() => setShowMoreOptions(!showMoreOptions)} title="More options">
                           <img src="/images/more-icon.png" alt="More" className="action-icon" />
                         </button>
+                        {showMoreOptions && (
+                          <div className="more-options-dropdown">
+                            <button onClick={() => { setShowMoreOptions(false); navigate('/clinician/labs'); }}>View Lab Results</button>
+                            <button onClick={() => { setShowMoreOptions(false); navigate('/clinician/appointments'); }}>View Appointments</button>
+                            <button onClick={() => { setShowMoreOptions(false); setShowPrescriptionModal(true); }}>Add Prescription</button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -424,7 +500,7 @@ const Patients: React.FC = () => {
                       <div className="info-card prescriptions-card">
                         <div className="card-header">
                           <span className="card-title-text">Active Prescriptions</span>
-                          <button className="add-new-link" onClick={() => alert('Add new prescription')}>+ Add New</button>
+                          <button className="add-new-link" onClick={() => setShowPrescriptionModal(true)}>+ Add New</button>
                         </div>
 
                         <table className="prescriptions-table">
@@ -454,7 +530,9 @@ const Patients: React.FC = () => {
                           </tbody>
                         </table>
 
-                        <button className="view-all-link" onClick={() => alert('View all prescriptions')}>View All</button>
+                        <button className="view-all-link" onClick={() => setShowAllPrescriptions(!showAllPrescriptions)}>
+                          {showAllPrescriptions ? 'Show Less' : 'View All'}
+                        </button>
                       </div>
 
                       {/* Recent Lab Requests */}
@@ -487,6 +565,94 @@ const Patients: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Add Prescription Modal */}
+      {showPrescriptionModal && (
+        <div className="patients-modal-overlay" onClick={() => !prescriptionLoading && setShowPrescriptionModal(false)}>
+          <div className="patients-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="patients-modal-header">
+              <h2>Add New Prescription</h2>
+              <button className="patients-modal-close" onClick={() => !prescriptionLoading && setShowPrescriptionModal(false)} disabled={prescriptionLoading}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="patients-modal-body">
+              {prescriptionSuccess && (
+                <div style={{ padding: '12px', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '8px', marginBottom: '16px', textAlign: 'center' }}>
+                  Prescription added successfully!
+                </div>
+              )}
+              {prescriptionError && (
+                <div style={{ padding: '12px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '8px', marginBottom: '16px' }}>
+                  {prescriptionError}
+                </div>
+              )}
+              <div className="patients-form-group">
+                <label>Medication Name *</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Ibuprofen"
+                  value={prescriptionForm.medication}
+                  onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medication: e.target.value })}
+                  className="patients-input"
+                  disabled={prescriptionLoading}
+                />
+              </div>
+              <div className="patients-form-group">
+                <label>Dosage *</label>
+                <input
+                  type="text"
+                  placeholder="e.g., 400mg"
+                  value={prescriptionForm.dosage}
+                  onChange={(e) => setPrescriptionForm({ ...prescriptionForm, dosage: e.target.value })}
+                  className="patients-input"
+                  disabled={prescriptionLoading}
+                />
+              </div>
+              <div className="patients-form-group">
+                <label>Frequency *</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Every 6 hours"
+                  value={prescriptionForm.frequency}
+                  onChange={(e) => setPrescriptionForm({ ...prescriptionForm, frequency: e.target.value })}
+                  className="patients-input"
+                  disabled={prescriptionLoading}
+                />
+              </div>
+              <div className="patients-form-group">
+                <label>Duration (optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g., 7 days"
+                  value={prescriptionForm.duration}
+                  onChange={(e) => setPrescriptionForm({ ...prescriptionForm, duration: e.target.value })}
+                  className="patients-input"
+                  disabled={prescriptionLoading}
+                />
+              </div>
+              <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '12px' }}>
+                Patient: <strong>{selectedPatient?.name}</strong>
+              </p>
+            </div>
+            <div className="patients-modal-footer">
+              <button className="patients-btn-outline" onClick={() => setShowPrescriptionModal(false)} disabled={prescriptionLoading}>
+                Cancel
+              </button>
+              <button
+                className="patients-btn-primary"
+                onClick={handleCreatePrescription}
+                disabled={prescriptionLoading}
+              >
+                {prescriptionLoading ? 'Adding...' : 'Add Prescription'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

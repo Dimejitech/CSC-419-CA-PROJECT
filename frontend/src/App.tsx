@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import {
   SignUp,
@@ -18,7 +19,6 @@ import {
   ClinicianPatients,
   ClinicianAppointments,
   ClinicianProfile,
-  ClinicianProfileSecurity,
 } from './pages';
 import { DashboardLayout } from './layouts';
 import { ProtectedRoute } from './components';
@@ -76,11 +76,6 @@ function App() {
         <Route path="/clinician/profile" element={
           <ProtectedRoute requiredRole="Clinician">
             <ClinicianProfile />
-          </ProtectedRoute>
-        } />
-        <Route path="/clinician/profile/security" element={
-          <ProtectedRoute requiredRole="Clinician">
-            <ClinicianProfileSecurity />
           </ProtectedRoute>
         } />
 

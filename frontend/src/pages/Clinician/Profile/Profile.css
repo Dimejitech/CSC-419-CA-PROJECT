@@ -477,6 +477,26 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  gap: 16px;
+}
+
+.profile-message {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.profile-message--success {
+  background-color: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #10B981;
+}
+
+.profile-message--error {
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #EF4444;
 }
 
 .profile-tabs {
@@ -693,6 +713,10 @@
 
 @media (max-width: 768px) {
   .profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-form-row-three {
     grid-template-columns: 1fr;
   }
 

@@ -59,6 +59,27 @@ export const SignIn: React.FC = () => {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
+      // Get the current user from localStorage to check role
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          // Decode JWT to get role (basic decode without verification)
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const userRole = payload.role;
+
+          // Staff roles should use the staff portal
+          const staffRoles = ['Clinician', 'LabTechnician', 'Staff', 'Admin'];
+          if (staffRoles.includes(userRole)) {
+            // Redirect staff to clinician portal
+            navigate('/clinician/dashboard');
+            setIsSubmitting(false);
+            return;
+          }
+        } catch (e) {
+          // If we can't decode token, proceed to patient portal
+          console.warn('Could not decode token:', e);
+        }
+      }
       navigate('/');
     } else {
       setErrors({ general: result.error });

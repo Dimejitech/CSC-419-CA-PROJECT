@@ -426,7 +426,7 @@ export const BookAppointment: React.FC = () => {
                 >
                   <img src={avatar} alt={clinician.name} className={styles.clinicianAvatar} />
                   <div className={styles.clinicianInfo}>
-                    <span className={styles.clinicianName}>Dr. {clinician.firstName} {clinician.lastName}</span>
+                    <span className={styles.clinicianName}>{clinician.firstName?.startsWith('Dr.') ? '' : 'Dr. '}{clinician.firstName} {clinician.lastName}</span>
                     <span className={styles.clinicianEmail}>{clinician.email}</span>
                   </div>
                 </button>

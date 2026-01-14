@@ -3,12 +3,14 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BillingService } from './billing.service';
 import { BillingController } from './billing.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { NotificationModule } from '../notification/notification.module';
 import { InvoiceGenerationService } from './services/invoice-generation.service';
 import { BillingEventsListener } from './events/billing-events.listener';
 
 @Module({
   imports: [
     PrismaModule,
+    NotificationModule,
     EventEmitterModule.forRoot(),
   ],
   controllers: [BillingController],

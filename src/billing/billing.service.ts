@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notification/notification.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { CreateLineItemDto } from './dto/create-line-item.dto';
@@ -7,10 +8,13 @@ import { InvoiceQueryDto } from './dto/invoice-query.dto';
 
 @Injectable()
 export class BillingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   async createInvoice(dto: CreateInvoiceDto) {
-    return this.prisma.billing_invoices.create({
+    const invoice = await this.prisma.billing_invoices.create({
       data: {
         patient_id: dto.patientId,
         encounter_id: dto.encounterId || null,
@@ -18,6 +22,31 @@ export class BillingService {
         status: 'Draft',
       },
     });
+
+    // Note: Notification will be sent when invoice status changes from Draft to Pending
+    // This is because Draft invoices are being prepared and may not have final amounts
+
+    return invoice;
+  }
+
+  async finalizeInvoice(id: string) {
+    const invoice = await this.prisma.billing_invoices.findUnique({ where: { id } });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+
+    const updatedInvoice = await this.prisma.billing_invoices.update({
+      where: { id },
+      data: { status: 'Pending' },
+    });
+
+    // Send notification when invoice is finalized
+    if (invoice.patient_id) {
+      this.notificationService.notifyInvoiceCreated(invoice.patient_id, {
+        amount: `₦${Number(invoice.total_amount).toLocaleString()}`,
+        invoiceId: id,
+      }).catch(err => console.error('Failed to send invoice notification:', err));
+    }
+
+    return updatedInvoice;
   }
 
   async findPatientInvoices(patientId: string) {
@@ -50,10 +79,20 @@ export class BillingService {
     const invoice = await this.prisma.billing_invoices.findUnique({ where: { id } });
     if (!invoice) throw new NotFoundException('Invoice not found');
 
-    return this.prisma.billing_invoices.update({
+    const updatedInvoice = await this.prisma.billing_invoices.update({
       where: { id },
       data: { status: dto.status },
     });
+
+    // Send notification when invoice becomes pending (ready for payment)
+    if (dto.status === 'Pending' && invoice.status !== 'Pending' && invoice.patient_id) {
+      this.notificationService.notifyInvoiceCreated(invoice.patient_id, {
+        amount: `₦${Number(invoice.total_amount).toLocaleString()}`,
+        invoiceId: id,
+      }).catch(err => console.error('Failed to send invoice notification:', err));
+    }
+
+    return updatedInvoice;
   }
 
   async addLineItem(invoiceId: string, dto: CreateLineItemDto) {

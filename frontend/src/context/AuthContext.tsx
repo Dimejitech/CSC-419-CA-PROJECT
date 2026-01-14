@@ -60,6 +60,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         last_name: userData.last_name,
         firstName: userData.first_name,
         lastName: userData.last_name,
+        phone_number: userData.phone_number,
+        address: userData.address,
+        city: userData.city,
+        state: userData.state,
+        zip_code: userData.zip_code,
         role: userData.roles?.name || userData.role,
       });
     } catch (error) {
@@ -74,14 +79,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await authAPI.login(email, password);
       // Use user data from login response if available
       if (response.user) {
+        // Backend returns snake_case fields (first_name, last_name)
         setUser({
           id: response.user.id,
           email: response.user.email,
-          first_name: response.user.firstName,
-          last_name: response.user.lastName,
-          firstName: response.user.firstName,
-          lastName: response.user.lastName,
-          role: response.user.role,
+          first_name: response.user.first_name,
+          last_name: response.user.last_name,
+          firstName: response.user.first_name,
+          lastName: response.user.last_name,
+          phone_number: response.user.phone_number,
+          address: response.user.address,
+          city: response.user.city,
+          state: response.user.state,
+          zip_code: response.user.zip_code,
+          role: response.user.role || response.user.roles?.name,
+          role_id: response.user.role_id,
         });
       } else {
         // Fallback to fetching user data

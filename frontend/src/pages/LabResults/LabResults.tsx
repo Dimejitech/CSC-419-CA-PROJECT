@@ -51,6 +51,114 @@ export const LabResults: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { user } = useAuth();
 
+  // Filter states
+  const [testTypeFilter, setTestTypeFilter] = useState('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('severity');
+
+  // Generate and download PDF for a lab result
+  const handleDownloadPDF = (result: LabResult) => {
+    const formatDateForPDF = (dateStr: string | null | undefined) => {
+      if (!dateStr) return 'Date not available';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'Date not available';
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow pop-ups to download the PDF');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Lab Result - ${result.test_name}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+          .header { text-align: center; border-bottom: 2px solid #0d9488; padding-bottom: 20px; margin-bottom: 30px; }
+          .logo { font-size: 24px; font-weight: bold; color: #0d9488; }
+          .title { font-size: 20px; margin-top: 10px; }
+          .patient-info { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+          .result-section { margin-bottom: 25px; }
+          .result-section h3 { color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+          .result-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+          .result-label { font-weight: 600; color: #666; }
+          .result-value { color: #333; }
+          .abnormal { color: #dc2626; font-weight: bold; }
+          .normal { color: #16a34a; }
+          .notes { background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; }
+          .notes-title { font-weight: bold; margin-bottom: 10px; }
+          .footer { margin-top: 40px; text-align: center; color: #999; font-size: 12px; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">CityCare Medical Center</div>
+          <div class="title">Laboratory Test Result</div>
+        </div>
+
+        <div class="patient-info">
+          <strong>Patient:</strong> ${user?.first_name || user?.firstName || ''} ${user?.last_name || user?.lastName || ''}<br>
+          <strong>Date Generated:</strong> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
+
+        <div class="result-section">
+          <h3>${result.test_name}</h3>
+          <div class="result-row">
+            <span class="result-label">Test Date:</span>
+            <span class="result-value">${formatDateForPDF(result.result_date)}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Result:</span>
+            <span class="result-value ${result.status !== 'Normal' ? 'abnormal' : ''}">${result.result_value} ${result.unit || ''}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Reference Range:</span>
+            <span class="result-value">${result.reference_range || 'N/A'}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Status:</span>
+            <span class="result-value ${result.status !== 'Normal' ? 'abnormal' : 'normal'}">${result.status}</span>
+          </div>
+        </div>
+
+        ${result.notes ? `
+        <div class="notes">
+          <div class="notes-title">Doctor's Notes:</div>
+          <p>${result.notes}</p>
+        </div>
+        ` : ''}
+
+        <div class="footer">
+          <p>This document is generated from CityCare Medical Center's electronic health records.</p>
+          <p>For questions about your results, please contact your healthcare provider.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+    // Wait for content to load then trigger print
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
+
+  // Handle "Ask a Question" - show message since messaging isn't implemented
+  const handleAskQuestion = (result: LabResult) => {
+    alert(`To ask questions about your "${result.test_name}" results, please:\n\n1. Call the clinic at: (234) 800-CITYCARE\n2. Schedule a follow-up appointment\n3. Use the secure messaging feature (coming soon)\n\nYour care team will be happy to discuss your results with you.`);
+  };
+
   useEffect(() => {
     const fetchLabResults = async () => {
       if (!user?.id) return;
@@ -71,8 +179,10 @@ export const LabResults: React.FC = () => {
     fetchLabResults();
   }, [user?.id]);
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'Date not available';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Date not available';
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -89,15 +199,64 @@ export const LabResults: React.FC = () => {
 
   const isAbnormal = (status: string) => status !== 'Normal';
 
-  // Calculate summary
+  // Get unique test types for filter dropdown
+  const testTypes = [...new Set(results.map(r => r.test_name || r.order?.test_type || 'Unknown'))];
+
+  // Apply filters and sorting
+  const getFilteredResults = () => {
+    let filtered = [...results];
+
+    // Filter by test type
+    if (testTypeFilter !== 'all') {
+      filtered = filtered.filter(r => (r.test_name || r.order?.test_type) === testTypeFilter);
+    }
+
+    // Filter by date range
+    if (dateRangeFilter !== 'all') {
+      const now = new Date();
+      const days = parseInt(dateRangeFilter);
+      const cutoffDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      filtered = filtered.filter(r => {
+        if (!r.result_date) return true;
+        return new Date(r.result_date) >= cutoffDate;
+      });
+    }
+
+    // Sort results
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'severity':
+          // Abnormal results first
+          const aAbnormal = isAbnormal(a.status) ? 0 : 1;
+          const bAbnormal = isAbnormal(b.status) ? 0 : 1;
+          return aAbnormal - bAbnormal;
+        case 'date':
+          const dateA = a.result_date ? new Date(a.result_date).getTime() : 0;
+          const dateB = b.result_date ? new Date(b.result_date).getTime() : 0;
+          return dateB - dateA; // Most recent first
+        case 'name':
+          const nameA = (a.test_name || a.order?.test_type || '').toLowerCase();
+          const nameB = (b.test_name || b.order?.test_type || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  };
+
+  const filteredResults = getFilteredResults();
+
+  // Calculate summary based on ALL results (not filtered)
   const summaryData = {
     totalTests: results.length,
     normal: results.filter(r => !isAbnormal(r.status)).length,
     abnormal: results.filter(r => isAbnormal(r.status)).length,
   };
 
-  const expandedResult = results.find(r => r.id === expandedId);
-  const collapsedResults = results.filter(r => r.id !== expandedId);
+  const expandedResult = filteredResults.find(r => r.id === expandedId);
+  const collapsedResults = filteredResults.filter(r => r.id !== expandedId);
 
   return (
     <div className={styles.container}>
@@ -127,22 +286,34 @@ export const LabResults: React.FC = () => {
 
       {/* Filters Row */}
       <div className={styles.filtersRow}>
-        <select className={styles.filterSelect}>
-          <option>All Tests</option>
-          <option>Cholesterol</option>
-          <option>Blood Sugar</option>
-          <option>Blood Count</option>
+        <select
+          className={styles.filterSelect}
+          value={testTypeFilter}
+          onChange={(e) => setTestTypeFilter(e.target.value)}
+        >
+          <option value="all">All Tests</option>
+          {testTypes.map(type => (
+            <option key={type} value={type}>{type}</option>
+          ))}
         </select>
-        <select className={styles.filterSelect}>
-          <option>Last 30 days</option>
-          <option>Last 60 days</option>
-          <option>Last 90 days</option>
-          <option>All time</option>
+        <select
+          className={styles.filterSelect}
+          value={dateRangeFilter}
+          onChange={(e) => setDateRangeFilter(e.target.value)}
+        >
+          <option value="30">Last 30 days</option>
+          <option value="60">Last 60 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="all">All time</option>
         </select>
-        <select className={styles.filterSelect}>
-          <option>Sort: Severity</option>
-          <option>Sort: Date</option>
-          <option>Sort: Name</option>
+        <select
+          className={styles.filterSelect}
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <option value="severity">Sort: Severity</option>
+          <option value="date">Sort: Date</option>
+          <option value="name">Sort: Name</option>
         </select>
       </div>
 
@@ -213,8 +384,8 @@ export const LabResults: React.FC = () => {
                       <span><strong>Doctor's Notes:</strong> {expandedResult.notes}</span>
                     </div>
                     <div className={styles.notesActions}>
-                      <button className={styles.downloadBtn}>Download PDF</button>
-                      <button className={styles.askBtn}>Ask a question</button>
+                      <button className={styles.downloadBtn} onClick={() => handleDownloadPDF(expandedResult)}>Download PDF</button>
+                      <button className={styles.askBtn} onClick={() => handleAskQuestion(expandedResult)}>Ask a question</button>
                     </div>
                   </div>
                 )}

@@ -141,11 +141,15 @@ function StatCard({
 
 export default function Labs() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [pendingLabs, setPendingLabs] = useState<LabRow[]>([]);
   const [finishedLabs, setFinishedLabs] = useState<LabRow[]>([]);
   const [stats, setStats] = useState<LabStats>({ pending: 0, urgent: 0, completedToday: 0 });
   const [loading, setLoading] = useState(true);
+  const [selectedLab, setSelectedLab] = useState<LabRow | null>(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showAllPending, setShowAllPending] = useState(false);
+  const [showAllFinished, setShowAllFinished] = useState(false);
 
   useEffect(() => {
     const fetchLabData = async () => {
@@ -327,7 +331,7 @@ export default function Labs() {
       </button>
     </nav>
 
-    <button className="labs-logout" type="button" onClick={() => handleNavigation('/clinician/signin')}>
+    <button className="labs-logout" type="button" onClick={() => { logout(); navigate('/clinician/signin'); }}>
       <span className="labs-logoutIcon">
         <img className="labs-logoutImg" src="/images/log-out.png" alt="" />
       </span>
@@ -344,7 +348,7 @@ export default function Labs() {
           <div className="labs-contentTop">
             <h1 className="labs-title">Labs</h1>
 
-            <button className="labs-primaryBtn" type="button" onClick={() => alert('Request new lab test')}>
+            <button className="labs-primaryBtn" type="button" onClick={() => setShowRequestModal(true)}>
               Request New Lab
             </button>
           </div>
@@ -358,19 +362,101 @@ export default function Labs() {
           <div className="labs-tables">
             <LabsTable
               title="Pending Labs"
-              rows={pendingLabs}
-              onReview={(labId) => alert(`Review lab report: ${labId}`)}
-              onViewAll={() => alert('View all pending labs')}
+              rows={showAllPending ? pendingLabs : pendingLabs.slice(0, 5)}
+              onReview={(labId) => {
+                const lab = pendingLabs.find(l => l.labId === labId);
+                if (lab) setSelectedLab(lab);
+              }}
+              onViewAll={() => setShowAllPending(!showAllPending)}
             />
             <LabsTable
               title="Finished Labs"
-              rows={finishedLabs}
-              onReview={(labId) => alert(`Review lab report: ${labId}`)}
-              onViewAll={() => alert('View all finished labs')}
+              rows={showAllFinished ? finishedLabs : finishedLabs.slice(0, 5)}
+              onReview={(labId) => {
+                const lab = finishedLabs.find(l => l.labId === labId);
+                if (lab) setSelectedLab(lab);
+              }}
+              onViewAll={() => setShowAllFinished(!showAllFinished)}
             />
           </div>
         </main>
       </div>
+
+      {/* Lab Review Modal */}
+      {selectedLab && (
+        <div className="labs-modal-overlay" onClick={() => setSelectedLab(null)}>
+          <div className="labs-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="labs-modal-header">
+              <h2>Lab Report Details</h2>
+              <button className="labs-modal-close" onClick={() => setSelectedLab(null)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="labs-modal-body">
+              <div className="labs-modal-row">
+                <span className="labs-modal-label">Lab ID:</span>
+                <span className="labs-modal-value">{selectedLab.labId}</span>
+              </div>
+              <div className="labs-modal-row">
+                <span className="labs-modal-label">Test Name:</span>
+                <span className="labs-modal-value">{selectedLab.testName}</span>
+              </div>
+              <div className="labs-modal-row">
+                <span className="labs-modal-label">Patient:</span>
+                <span className="labs-modal-value">{selectedLab.patient}</span>
+              </div>
+              <div className="labs-modal-row">
+                <span className="labs-modal-label">Status:</span>
+                <StatusPill status={selectedLab.status} />
+              </div>
+              <div className="labs-modal-row">
+                <span className="labs-modal-label">Last Visit:</span>
+                <span className="labs-modal-value">{selectedLab.lastVisit}</span>
+              </div>
+            </div>
+            <div className="labs-modal-footer">
+              <button className="labs-btn-outline" onClick={() => setSelectedLab(null)}>Close</button>
+              <button className="labs-btn-primary" onClick={() => { setSelectedLab(null); navigate('/clinician/patients'); }}>
+                View Patient
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request New Lab Modal */}
+      {showRequestModal && (
+        <div className="labs-modal-overlay" onClick={() => setShowRequestModal(false)}>
+          <div className="labs-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="labs-modal-header">
+              <h2>Request New Lab Test</h2>
+              <button className="labs-modal-close" onClick={() => setShowRequestModal(false)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="labs-modal-body">
+              <p style={{ color: '#6b7280', marginBottom: '16px' }}>
+                To request a new lab test, please navigate to the Patients page and select a patient first.
+              </p>
+              <p style={{ color: '#6b7280' }}>
+                Lab requests are created within the context of a patient encounter.
+              </p>
+            </div>
+            <div className="labs-modal-footer">
+              <button className="labs-btn-outline" onClick={() => setShowRequestModal(false)}>Cancel</button>
+              <button className="labs-btn-primary" onClick={() => { setShowRequestModal(false); navigate('/clinician/patients'); }}>
+                Go to Patients
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

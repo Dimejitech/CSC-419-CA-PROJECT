@@ -12,7 +12,7 @@ import {
 } from '../../components';
 import { Button } from '../../components';
 import { useAuth } from '../../context';
-import { schedulingAPI, billingAPI } from '../../services/api';
+import { schedulingAPI, billingAPI, notificationAPI, clinicalAPI, labAPI } from '../../services/api';
 
 interface QuickAction {
   title: string;
@@ -52,7 +52,7 @@ const quickActions: QuickAction[] = [
   },
   {
     title: 'Pay Your Bill',
-    description: 'Check your latest test outcomes.',
+    description: 'View and pay your outstanding bills.',
     icon: <CreditCardIcon size={24} color="#F59E0B" />,
     path: '/billing',
     buttonText: 'Pay Bill',
@@ -87,6 +87,17 @@ const EmptyNotificationIcon: React.FC<{ size?: number }> = ({ size = 60 }) => (
   </svg>
 );
 
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  reference_id?: string;
+  reference_type?: string;
+}
+
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -94,26 +105,128 @@ export const Home: React.FC = () => {
 
   const [appointments, setAppointments] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [healthSummary, setHealthSummary] = useState<{
+    latestDiagnosis: string;
+    medications: string[];
+    recentLabResults: string[];
+  }>({
+    latestDiagnosis: 'No recent diagnosis',
+    medications: [],
+    recentLabResults: [],
+  });
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
 
     setLoading(true);
     try {
-      const [appointmentsData, invoicesData] = await Promise.all([
+      const [appointmentsData, invoicesData, notificationsData] = await Promise.all([
         schedulingAPI.getPatientBookings(user.id).catch(() => []),
         billingAPI.getPatientInvoices(user.id).catch(() => []),
+        notificationAPI.getNotifications(10).catch(() => ({ notifications: [], unreadCount: 0 })),
       ]);
 
       setAppointments(appointmentsData || []);
       setInvoices(invoicesData || []);
+      setNotifications(notificationsData?.notifications || []);
+      setUnreadCount(notificationsData?.unreadCount || 0);
+
+      // Fetch health summary data
+      try {
+        const [prescriptionsData, labResultsData, chartData] = await Promise.all([
+          clinicalAPI.getPatientPrescriptions(user.id).catch(() => []),
+          labAPI.getPatientResults(user.id).catch(() => []),
+          clinicalAPI.getPatientChart(user.id).catch(() => null),
+        ]);
+
+        // Get medication names from prescriptions
+        const medications = (prescriptionsData || [])
+          .slice(0, 3)
+          .map((p: any) => p.medication_name || p.medicationName || 'Unknown');
+
+        // Get recent lab test names
+        const labResults = (labResultsData || [])
+          .slice(0, 3)
+          .map((r: any) => r.testItem?.testName || r.test_name || 'Lab Test');
+
+        // Get latest diagnosis from encounters
+        let latestDiagnosis = 'No recent diagnosis';
+        if (chartData?.encounters?.length > 0) {
+          const latestEncounter = chartData.encounters[0];
+          if (latestEncounter.soapNotes?.assessment) {
+            latestDiagnosis = latestEncounter.soapNotes.assessment;
+          }
+        }
+
+        setHealthSummary({
+          latestDiagnosis,
+          medications,
+          recentLabResults: labResults,
+        });
+      } catch (healthError) {
+        console.error('Error fetching health summary:', healthError);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   }, [user?.id]);
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await notificationAPI.markAsRead(notificationId);
+      setNotifications(notifications.map(n =>
+        n.id === notificationId ? { ...n, is_read: true } : n
+      ));
+      setUnreadCount(Math.max(0, unreadCount - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationAPI.markAllAsRead();
+      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'appointment':
+        return <CalendarIcon size={16} color="#03A5FF" />;
+      case 'lab_result':
+        return <LabIcon size={16} color="#8B5CF6" />;
+      case 'invoice':
+        return <CreditCardIcon size={16} color="#F59E0B" />;
+      case 'prescription':
+        return <DocumentIcon size={16} color="#22C55E" />;
+      default:
+        return <HeartIcon size={16} color="#03A5FF" />;
+    }
+  };
+
+  const formatNotificationTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
 
   // Fetch data on mount and when navigating to this page
   useEffect(() => {
@@ -129,7 +242,7 @@ export const Home: React.FC = () => {
 
   // Calculate outstanding balance
   const outstandingBalance = invoices
-    .filter(inv => inv.status === 'Unpaid' || inv.status === 'Overdue')
+    .filter(inv => ['Draft', 'Pending', 'Unpaid', 'Overdue'].includes(inv.status))
     .reduce((sum, inv) => sum + parseFloat(inv.total_amount || 0), 0);
 
   const formatDate = (dateStr: string) => {
@@ -185,7 +298,7 @@ export const Home: React.FC = () => {
                     {formatDate(upcomingAppointment.slot?.startTime)} | {formatTime(upcomingAppointment.slot?.startTime)}
                   </p>
                   <p className={styles.appointmentDoctor}>
-                    Dr. {upcomingAppointment.clinician?.first_name} {upcomingAppointment.clinician?.last_name}
+                    {upcomingAppointment.clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{upcomingAppointment.clinician?.first_name} {upcomingAppointment.clinician?.last_name}
                   </p>
                   <p className={styles.appointmentDepartment}>
                     {upcomingAppointment.reasonForVisit || 'General Consultation'}
@@ -215,11 +328,47 @@ export const Home: React.FC = () => {
 
         {/* Notifications Card */}
         <div className={styles.notificationsCard}>
-          <h3 className={styles.notificationsHeader}>Notifications</h3>
-          <div className={styles.notificationsEmpty}>
-            <EmptyNotificationIcon size={64} />
-            <p className={styles.notificationsEmptyText}>You have no notifications</p>
+          <div className={styles.notificationsHeaderRow}>
+            <h3 className={styles.notificationsHeader}>
+              Notifications
+              {unreadCount > 0 && (
+                <span className={styles.unreadBadge}>{unreadCount}</span>
+              )}
+            </h3>
+            {notifications.length > 0 && unreadCount > 0 && (
+              <button className={styles.markAllReadBtn} onClick={handleMarkAllAsRead}>
+                Mark all read
+              </button>
+            )}
           </div>
+          {notifications.length === 0 ? (
+            <div className={styles.notificationsEmpty}>
+              <EmptyNotificationIcon size={64} />
+              <p className={styles.notificationsEmptyText}>You have no notifications</p>
+            </div>
+          ) : (
+            <div className={styles.notificationsList}>
+              {notifications.slice(0, 5).map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`${styles.notificationItem} ${!notification.is_read ? styles.unread : ''}`}
+                  onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                >
+                  <div className={styles.notificationIcon}>
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className={styles.notificationContent}>
+                    <p className={styles.notificationTitle}>{notification.title}</p>
+                    <p className={styles.notificationMessage}>{notification.message}</p>
+                    <span className={styles.notificationTime}>
+                      {formatNotificationTime(notification.created_at)}
+                    </span>
+                  </div>
+                  {!notification.is_read && <span className={styles.unreadDot} />}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -273,21 +422,33 @@ export const Home: React.FC = () => {
                 <HeartIcon size={16} color="#EF4444" />
               </span>
               <span className={styles.healthItemLabel}>Latest Diagnosis:</span>
-              <span className={styles.healthItemValue}>No recent diagnosis</span>
+              <span className={styles.healthItemValue}>
+                {loading ? 'Loading...' : healthSummary.latestDiagnosis}
+              </span>
             </div>
             <div className={styles.healthItem}>
               <span className={styles.healthItemIcon}>
                 <DocumentIcon size={16} color="#03A5FF" />
               </span>
               <span className={styles.healthItemLabel}>Current Medications:</span>
-              <span className={styles.healthItemValue}>View in Medical Records</span>
+              <span className={styles.healthItemValue}>
+                {loading ? 'Loading...' :
+                  healthSummary.medications.length > 0
+                    ? healthSummary.medications.join(', ')
+                    : 'No current medications'}
+              </span>
             </div>
             <div className={styles.healthItem}>
               <span className={styles.healthItemIcon}>
                 <LabIcon size={16} color="#22C55E" />
               </span>
               <span className={styles.healthItemLabel}>Recent Lab Results:</span>
-              <span className={styles.healthItemValue}>View in Lab Results</span>
+              <span className={styles.healthItemValue}>
+                {loading ? 'Loading...' :
+                  healthSummary.recentLabResults.length > 0
+                    ? healthSummary.recentLabResults.join(', ')
+                    : 'No recent lab results'}
+              </span>
             </div>
           </div>
         </div>

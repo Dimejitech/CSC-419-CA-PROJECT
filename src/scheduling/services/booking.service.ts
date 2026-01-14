@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationService } from '../../notification/notification.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
 import { UpdateBookingDto } from '../dto/update-booking.dto';
 
@@ -26,7 +27,10 @@ import { UpdateBookingDto } from '../dto/update-booking.dto';
  */
 @Injectable()
 export class BookingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   /**
    * Create a new appointment booking
@@ -115,7 +119,14 @@ export class BookingService {
 
       console.log(`[BookingService] Booking created with ID: ${booking.id}`);
 
-      return {
+      // Get slot time for notification
+      const slotTime = await tx.$queryRaw<Array<{ start_time: Date }>>`
+        SELECT lower(time_range) as start_time
+        FROM appt_slots
+        WHERE id = ${dto.slotId}::uuid
+      `;
+
+      const bookingResult = {
         id: booking.id,
         patientId: booking.patient_id,
         slotId: booking.slot_id,
@@ -130,6 +141,36 @@ export class BookingService {
         },
         message: 'Booking created successfully',
       };
+
+      // Send notification to patient (outside transaction to not block)
+      const appointmentDate = slotTime[0]?.start_time
+        ? new Date(slotTime[0].start_time).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : 'your scheduled time';
+
+      // Avoid duplicate "Dr." prefix if first_name already contains it
+      const doctorPrefix = slot.first_name?.startsWith('Dr.') ? '' : 'Dr. ';
+      const doctorName = `${doctorPrefix}${slot.first_name} ${slot.last_name}`;
+
+      this.notificationService.notifyAppointmentBooked(dto.patientId, {
+        date: appointmentDate,
+        doctorName,
+        bookingId: booking.id,
+      }).catch(err => console.error('Failed to send booking notification:', err));
+
+      // Send notification to clinician about the new booking
+      const patientName = `${patient.first_name} ${patient.last_name}`;
+      this.notificationService.notifyClinicianNewAppointment(slot.clinician_id, {
+        date: appointmentDate,
+        patientName,
+        bookingId: booking.id,
+      }).catch(err => console.error('Failed to send clinician notification:', err));
+
+      return bookingResult;
     });
   }
 
@@ -401,8 +442,32 @@ export class BookingService {
       throw new ConflictException('Cannot cancel a completed booking');
     }
 
+    // Get slot and clinician info for notification
+    let appointmentDate = 'your scheduled time';
+    let doctorName = 'your doctor';
+
+    if (booking.slot_id) {
+      const slotInfo = await this.prisma.$queryRaw<Array<{ start_time: Date; first_name: string; last_name: string }>>`
+        SELECT lower(s.time_range) as start_time, u.first_name, u.last_name
+        FROM appt_slots s
+        JOIN users u ON s.clinician_id = u.id
+        WHERE s.id = ${booking.slot_id}::uuid
+      `;
+      if (slotInfo[0]) {
+        appointmentDate = new Date(slotInfo[0].start_time).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+        // Avoid duplicate "Dr." prefix if first_name already contains it
+        const doctorPrefix = slotInfo[0].first_name?.startsWith('Dr.') ? '' : 'Dr. ';
+        doctorName = `${doctorPrefix}${slotInfo[0].first_name} ${slotInfo[0].last_name}`;
+      }
+    }
+
     // Cancel booking and free up slot in transaction
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Update booking status
       await tx.appt_bookings.update({
         where: { id: bookingId },
@@ -423,6 +488,17 @@ export class BookingService {
         slotId: booking.slot_id,
       };
     });
+
+    // Send cancellation notification
+    if (booking.patient_id) {
+      this.notificationService.notifyAppointmentCancelled(booking.patient_id, {
+        date: appointmentDate,
+        doctorName,
+        bookingId,
+      }).catch(err => console.error('Failed to send cancellation notification:', err));
+    }
+
+    return result;
   }
 
   /**
@@ -473,8 +549,24 @@ export class BookingService {
       throw new ConflictException(`New slot is ${newSlot.status} and cannot be booked`);
     }
 
+    // Get new slot time for notification
+    const newSlotTime = await this.prisma.$queryRaw<Array<{ start_time: Date }>>`
+      SELECT lower(time_range) as start_time
+      FROM appt_slots
+      WHERE id = ${newSlotId}::uuid
+    `;
+
+    const newAppointmentDate = newSlotTime[0]?.start_time
+      ? new Date(newSlotTime[0].start_time).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : 'your new scheduled time';
+
     // Reschedule in transaction
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Free up old slot if it exists
       if (booking.slot_id) {
         await tx.appt_slots.update({
@@ -520,5 +612,19 @@ export class BookingService {
         message: 'Booking rescheduled successfully',
       };
     });
+
+    // Send reschedule notification
+    if (booking.patient_id) {
+      // Avoid duplicate "Dr." prefix if first_name already contains it
+      const doctorPrefix = newSlot.users?.first_name?.startsWith('Dr.') ? '' : 'Dr. ';
+      const doctorName = `${doctorPrefix}${newSlot.users?.first_name} ${newSlot.users?.last_name}`;
+      this.notificationService.notifyAppointmentRescheduled(booking.patient_id, {
+        newDate: newAppointmentDate,
+        doctorName,
+        bookingId,
+      }).catch(err => console.error('Failed to send reschedule notification:', err));
+    }
+
+    return result;
   }
 }

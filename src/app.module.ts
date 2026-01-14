@@ -7,6 +7,7 @@ import { ClinicalModule } from './clinical/clinical.module';
 import { LabModule } from './lab/lab.module';
 import { BillingModule } from './billing/billing.module';
 import { AdminModule } from './admin/admin.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AdminModule } from './admin/admin.module';
     LabModule,
     BillingModule,
     AdminModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

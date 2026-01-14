@@ -47,6 +47,11 @@ const Appointments: React.FC = () => {
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeNavItem, setActiveNavItem] = useState('Appointments');
+  const [rescheduleModal, setRescheduleModal] = useState<{ open: boolean; appointmentId: string | null }>({ open: false, appointmentId: null });
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
+  const [showAllPast, setShowAllPast] = useState(false);
 
   const fetchSchedule = useCallback(async () => {
     if (!user?.id) return;
@@ -85,6 +90,44 @@ const Appointments: React.FC = () => {
     } catch (error) {
       console.error('Error cancelling appointment:', error);
       alert('Failed to cancel appointment');
+    }
+  };
+
+  const handleOpenReschedule = (appointmentId: string) => {
+    setRescheduleModal({ open: true, appointmentId });
+    setRescheduleDate('');
+    setRescheduleTime('');
+  };
+
+  const handleReschedule = async () => {
+    if (!rescheduleModal.appointmentId || !rescheduleDate || !rescheduleTime) {
+      alert('Please select a date and time');
+      return;
+    }
+
+    setRescheduleLoading(true);
+    try {
+      // Create a new slot for the rescheduled time
+      const newDateTime = new Date(`${rescheduleDate}T${rescheduleTime}`);
+      const endDateTime = new Date(newDateTime.getTime() + 30 * 60 * 1000); // 30 min appointment
+
+      // Create slot and reschedule
+      const newSlot = await schedulingAPI.createSlot({
+        clinicianId: user!.id,
+        startTime: newDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
+      });
+
+      await schedulingAPI.rescheduleBooking(rescheduleModal.appointmentId, { newSlotId: newSlot.id });
+
+      setRescheduleModal({ open: false, appointmentId: null });
+      fetchSchedule();
+      alert('Appointment rescheduled successfully');
+    } catch (error) {
+      console.error('Error rescheduling appointment:', error);
+      alert('Failed to reschedule appointment. Please try again.');
+    } finally {
+      setRescheduleLoading(false);
     }
   };
 
@@ -302,7 +345,7 @@ const Appointments: React.FC = () => {
 
                       <div className="appt-upcomingActions">
                         <button className="appt-btnPrimary" type="button" onClick={() => navigate(`/clinician/patients`)}>View Details</button>
-                        <button className="appt-btnOutline" type="button" onClick={() => alert('Reschedule functionality coming soon')}>Reschedule</button>
+                        <button className="appt-btnOutline" type="button" onClick={() => handleOpenReschedule(appointment.id)}>Reschedule</button>
                         <button className="appt-btnCancel" type="button" onClick={() => handleCancelAppointment(appointment.id)}>Cancel</button>
                       </div>
                     </div>
@@ -317,13 +360,15 @@ const Appointments: React.FC = () => {
                 <div className="appt-sectionHeader">
                   <h2 className="appt-sectionTitleGradient">Past Appointments</h2>
                   {pastAppointments.length > 4 && (
-                    <button className="appt-viewMoreBtn" type="button" onClick={() => alert('View more past appointments')}>View More</button>
+                    <button className="appt-viewMoreBtn" type="button" onClick={() => setShowAllPast(!showAllPast)}>
+                      {showAllPast ? 'Show Less' : 'View More'}
+                    </button>
                   )}
                 </div>
 
                 {pastAppointments.length > 0 ? (
                   <div className="appt-pastGrid">
-                    {pastAppointments.slice(0, 4).map((appointment) => (
+                    {pastAppointments.slice(0, showAllPast ? undefined : 4).map((appointment) => (
                       <div key={appointment.id} className="appt-pastCard">
                         <div className="appt-pastHeader">
                           <img src="/images/avatar.png" alt={`${appointment.patient?.first_name}`} className="appt-pastAvatar" />
@@ -351,6 +396,52 @@ const Appointments: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Reschedule Modal */}
+      {rescheduleModal.open && (
+        <div className="appt-modal-overlay" onClick={() => setRescheduleModal({ open: false, appointmentId: null })}>
+          <div className="appt-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="appt-modal-header">
+              <h2>Reschedule Appointment</h2>
+              <button className="appt-modal-close" onClick={() => setRescheduleModal({ open: false, appointmentId: null })}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="appt-modal-body">
+              <div className="appt-form-group">
+                <label>New Date</label>
+                <input
+                  type="date"
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="appt-input"
+                />
+              </div>
+              <div className="appt-form-group">
+                <label>New Time</label>
+                <input
+                  type="time"
+                  value={rescheduleTime}
+                  onChange={(e) => setRescheduleTime(e.target.value)}
+                  className="appt-input"
+                />
+              </div>
+            </div>
+            <div className="appt-modal-footer">
+              <button className="appt-btnOutline" onClick={() => setRescheduleModal({ open: false, appointmentId: null })}>
+                Cancel
+              </button>
+              <button className="appt-btnPrimary" onClick={handleReschedule} disabled={rescheduleLoading}>
+                {rescheduleLoading ? 'Rescheduling...' : 'Reschedule'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 import { useAuth } from '../../../context';
+import { userAPI } from '../../../services/api';
 
 interface ProfileData {
   firstName: string;
@@ -44,7 +45,7 @@ interface PasswordErrors {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal');
   const [isEditing, setIsEditing] = useState(true);
 
@@ -119,7 +120,8 @@ const Profile: React.FC = () => {
       const hasNumber = /\d/.test(passwordData.newPassword);
       const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(passwordData.newPassword);
 
-      if (!hasMinLength || !hasLowercase || !hasUppercase || !hasNumber || !hasSpecialChar) {
+      // Validation matches UI: min 8 chars, lowercase+uppercase, number OR special char
+      if (!hasMinLength || !hasLowercase || !hasUppercase || !(hasNumber || hasSpecialChar)) {
         newErrors.newPassword = 'Password does not meet all requirements';
       }
     }
@@ -134,20 +136,44 @@ const Profile: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSaveChanges = () => {
-    if (activeTab === 'security') {
-      if (validatePassword()) {
-        console.log('Updating password');
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmNewPassword: '',
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleSaveChanges = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      if (activeTab === 'security') {
+        if (validatePassword()) {
+          await userAPI.changePassword(passwordData.currentPassword, passwordData.newPassword);
+          setPasswordData({
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: '',
+          });
+          setSaveMessage({ type: 'success', text: 'Password changed successfully!' });
+          setIsEditing(false);
+        }
+      } else {
+        await userAPI.updateProfile({
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          phoneNumber: profileData.phoneNumber,
+          email: profileData.email,
+          address: profileData.address,
+          city: profileData.city,
+          state: profileData.state,
+          zipCode: profileData.zipCode,
         });
+        setSaveMessage({ type: 'success', text: 'Profile updated successfully!' });
         setIsEditing(false);
       }
-    } else {
-      console.log('Saving profile changes:', profileData);
-      setIsEditing(false);
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to save changes. Please try again.';
+      setSaveMessage({ type: 'error', text: message });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -286,7 +312,7 @@ const Profile: React.FC = () => {
               </button>
             </nav>
 
-            <button className="labs-logout" type="button" onClick={() => handleNavigation('/clinician/signin')}>
+            <button className="labs-logout" type="button" onClick={() => { logout(); navigate('/clinician/signin'); }}>
               <span className="labs-logoutIcon">
                 <img className="labs-logoutImg" src="/images/log-out.png" alt="" />
               </span>
@@ -371,8 +397,17 @@ const Profile: React.FC = () => {
             {/* Right Panel - Conditional Content */}
             <div className="profile-right">
               <div className="profile-form-header">
-                <button className="profile-saveBtn" onClick={handleSaveChanges}>
-                  Save Changes
+                {saveMessage && (
+                  <div className={`profile-message profile-message--${saveMessage.type}`}>
+                    {saveMessage.text}
+                  </div>
+                )}
+                <button
+                  className="profile-saveBtn"
+                  onClick={handleSaveChanges}
+                  disabled={saving}
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
 

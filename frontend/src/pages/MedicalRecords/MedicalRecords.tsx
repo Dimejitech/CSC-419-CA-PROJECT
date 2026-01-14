@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './MedicalRecords.module.css';
 import { ChevronRightIcon, WarningIcon } from '../../components';
 import { useAuth } from '../../context';
-import { clinicalAPI } from '../../services/api';
+import { clinicalAPI, labAPI } from '../../services/api';
 import avatar from '../../assets/avatar.png';
 
 type TabType = 'overview' | 'visit-history';
@@ -26,13 +26,45 @@ interface Encounter {
   };
 }
 
+interface Allergy {
+  id: string;
+  allergen_name: string;
+  severity: string;
+}
+
+interface SoapNote {
+  id: string;
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+}
+
+interface Prescription {
+  id: string;
+  medication_name: string;
+  dosage: string;
+  frequency: string;
+  duration?: string;
+}
+
 interface PatientChart {
   id: string;
   patient_id: string;
   blood_type?: string;
+  dob?: string;
   allergies?: string[];
+  patient_allergies?: Allergy[];
   diagnoses?: Diagnosis[];
   encounters?: Encounter[];
+  patient_encounters?: Array<{
+    id: string;
+    date: string;
+    status: string;
+    users?: { first_name: string; last_name: string };
+    patient_notes_soap?: SoapNote[];
+    patient_prescriptions?: Prescription[];
+  }>;
 }
 
 // Red circle icon for diagnosis
@@ -43,10 +75,19 @@ const DiagnosisIcon: React.FC = () => (
   </svg>
 );
 
+interface LabResult {
+  id: string;
+  test_name: string;
+  result_value: string;
+  status: string;
+  result_date: string;
+}
+
 export const MedicalRecords: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [chart, setChart] = useState<PatientChart | null>(null);
   const [encounters, setEncounters] = useState<Encounter[]>([]);
+  const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -55,13 +96,15 @@ export const MedicalRecords: React.FC = () => {
       if (!user?.id) return;
 
       try {
-        const [chartData, encountersData] = await Promise.all([
+        const [chartData, encountersData, labData] = await Promise.all([
           clinicalAPI.getPatientChart(user.id).catch(() => null),
           clinicalAPI.getPatientEncounters(user.id).catch(() => []),
+          labAPI.getPatientResults(user.id).catch(() => []),
         ]);
 
         setChart(chartData);
         setEncounters(encountersData || []);
+        setLabResults(labData || []);
       } catch (error) {
         console.error('Error fetching medical data:', error);
       } finally {
@@ -83,12 +126,30 @@ export const MedicalRecords: React.FC = () => {
 
   const patientInfo = {
     name: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Patient',
-    dateOfBirth: user?.date_of_birth ? formatDate(user.date_of_birth) : 'Not specified',
+    dateOfBirth: chart?.dob ? formatDate(chart.dob) : (user?.date_of_birth ? formatDate(user.date_of_birth) : 'Not specified'),
     bloodGroup: chart?.blood_type || 'Not specified',
-    allergies: chart?.allergies || [],
+    allergies: [...new Set(chart?.patient_allergies?.map(a => `${a.allergen_name} (${a.severity})`) || chart?.allergies || [])],
   };
 
-  const diagnoses = chart?.diagnoses || [];
+  // Extract diagnoses from SOAP note assessments
+  const diagnoses = chart?.patient_encounters?.flatMap(enc =>
+    enc.patient_notes_soap?.map(soap => ({
+      id: soap.id,
+      diagnosis_name: soap.assessment.split('.')[0].split('-')[0].trim(), // Get first sentence/phrase
+      diagnosis_code: '',
+      notes: soap.assessment,
+    })) || []
+  ).filter((d, i, arr) => arr.findIndex(x => x.diagnosis_name === d.diagnosis_name) === i) || []; // Remove duplicates
+
+  // Extract current medications from prescriptions
+  const medications = chart?.patient_encounters?.flatMap(enc =>
+    enc.patient_prescriptions?.map(p => ({
+      id: p.id,
+      name: `${p.medication_name} ${p.dosage}`,
+      frequency: p.frequency,
+      duration: p.duration,
+    })) || []
+  ).filter((m, i, arr) => arr.findIndex(x => x.name === m.name) === i) || []; // Remove duplicates
 
   return (
     <div className={styles.container}>
@@ -198,9 +259,23 @@ export const MedicalRecords: React.FC = () => {
                   <div className={styles.infoCard}>
                     <h3 className={styles.cardTitle}>Current Medications</h3>
                     <div className={styles.cardContent}>
-                      <p style={{ color: '#666', padding: '10px 0' }}>
-                        View prescriptions for current medications
-                      </p>
+                      {medications.length > 0 ? (
+                        medications.map((med) => (
+                          <div key={med.id} className={styles.diagnosisItem}>
+                            <span style={{ color: '#22C55E', fontSize: '20px' }}>💊</span>
+                            <div className={styles.diagnosisInfo}>
+                              <span className={styles.diagnosisName}>{med.name}</span>
+                              <span className={styles.diagnosisDesc}>
+                                {med.frequency}{med.duration ? ` • ${med.duration}` : ''}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p style={{ color: '#666', padding: '10px 0' }}>
+                          No current medications
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -209,9 +284,31 @@ export const MedicalRecords: React.FC = () => {
                 <div className={styles.labResultsCard}>
                   <h3 className={styles.cardTitle}>Recent Lab Results</h3>
                   <div className={styles.cardContent}>
-                    <p style={{ color: '#666', padding: '10px 0' }}>
-                      View lab results for recent tests
-                    </p>
+                    {labResults.length > 0 ? (
+                      labResults.slice(0, 3).map((result) => (
+                        <div key={result.id} className={styles.diagnosisItem}>
+                          <span style={{
+                            color: result.status === 'Normal' ? '#22C55E' : '#EF4444',
+                            fontSize: '20px'
+                          }}>🧪</span>
+                          <div className={styles.diagnosisInfo}>
+                            <span className={styles.diagnosisName}>{result.test_name}</span>
+                            <span className={styles.diagnosisDesc}>
+                              {result.result_value?.slice(0, 50)}{result.result_value?.length > 50 ? '...' : ''} • {result.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{ color: '#666', padding: '10px 0' }}>
+                        No recent lab results
+                      </p>
+                    )}
+                    {labResults.length > 3 && (
+                      <a href="/lab-results" style={{ color: '#03A5FF', fontSize: '14px', marginTop: '10px', display: 'block' }}>
+                        View all {labResults.length} results →
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -231,7 +328,7 @@ export const MedicalRecords: React.FC = () => {
                         />
                         <div className={styles.visitDetails}>
                           <span className={styles.visitDoctor}>
-                            Dr. {encounter.clinician?.first_name} {encounter.clinician?.last_name}
+                            {encounter.clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{encounter.clinician?.first_name} {encounter.clinician?.last_name}
                           </span>
                           <span className={styles.visitDepartment}>Medical Visit</span>
                           <span className={styles.visitReason}>

@@ -10,17 +10,23 @@ interface Prescription {
   medication_name: string;
   dosage: string;
   frequency: string;
-  instructions: string;
-  status: string;
-  prescribed_date: string;
-  clinician?: {
+  duration?: string;
+  status?: string;
+  // Data comes nested from backend
+  patient_encounters?: {
     id: string;
-    first_name: string;
-    last_name: string;
+    date: string;
+    status: string;
+    users?: {
+      id: string;
+      first_name: string;
+      last_name: string;
+    };
   };
 }
 
 interface PatientChart {
+  dob?: string;
   blood_type?: string;
   allergies?: string[];
 }
@@ -64,7 +70,7 @@ export const Prescriptions: React.FC = () => {
 
   const patientInfo = {
     name: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Patient',
-    dateOfBirth: user?.date_of_birth ? formatDate(user.date_of_birth) : 'Not specified',
+    dateOfBirth: chart?.dob ? formatDate(chart.dob) : 'Not specified',
     bloodGroup: chart?.blood_type || 'Not specified',
     allergies: chart?.allergies || [],
   };
@@ -116,33 +122,38 @@ export const Prescriptions: React.FC = () => {
           {loading ? (
             <p style={{ padding: '40px', textAlign: 'center' }}>Loading...</p>
           ) : prescriptions.length > 0 ? (
-            prescriptions.map((prescription) => (
-              <div key={prescription.id} className={styles.prescriptionCard}>
-                <div className={styles.prescriptionInfo}>
-                  <h3 className={styles.prescriptionName}>
-                    {prescription.medication_name} {prescription.dosage}
-                  </h3>
-                  <p className={styles.prescriptionDoctor}>
-                    Dr. {prescription.clinician?.first_name} {prescription.clinician?.last_name}
-                  </p>
-                  <p className={styles.prescriptionInstructions}>
-                    {prescription.frequency} - {prescription.instructions || 'Follow prescribed instructions'}
-                  </p>
+            prescriptions.map((prescription) => {
+              const clinician = prescription.patient_encounters?.users;
+              const prescribedDate = prescription.patient_encounters?.date;
+
+              return (
+                <div key={prescription.id} className={styles.prescriptionCard}>
+                  <div className={styles.prescriptionInfo}>
+                    <h3 className={styles.prescriptionName}>
+                      {prescription.medication_name} {prescription.dosage}
+                    </h3>
+                    <p className={styles.prescriptionDoctor}>
+                      {clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{clinician?.first_name || ''} {clinician?.last_name || ''}
+                    </p>
+                    <p className={styles.prescriptionInstructions}>
+                      {prescription.frequency} - {prescription.duration || 'Follow prescribed instructions'}
+                    </p>
+                  </div>
+                  <div className={styles.prescriptionMeta}>
+                    <span
+                      className={`${styles.statusTag} ${
+                        styles[(prescription.status || 'active').toLowerCase()]
+                      }`}
+                    >
+                      {prescription.status || 'Active'}
+                    </span>
+                    <span className={styles.prescriptionDate}>
+                      {prescribedDate ? formatDate(prescribedDate) : 'Date not available'}
+                    </span>
+                  </div>
                 </div>
-                <div className={styles.prescriptionMeta}>
-                  <span
-                    className={`${styles.statusTag} ${
-                      styles[(prescription.status || 'active').toLowerCase()]
-                    }`}
-                  >
-                    {prescription.status || 'Active'}
-                  </span>
-                  <span className={styles.prescriptionDate}>
-                    {formatDate(prescription.prescribed_date)}
-                  </span>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <p style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
               No prescriptions found

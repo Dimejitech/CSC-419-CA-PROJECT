@@ -70,6 +70,29 @@ const ClinicianSignIn: React.FC = () => {
     const result = await login(formData.emailOrPhone, formData.password);
 
     if (result.success) {
+      // Get the current user from localStorage to check role
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          // Decode JWT to get role (basic decode without verification)
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const userRole = payload.role;
+
+          // Allow Clinician, LabTechnician, Staff, and Admin roles
+          const allowedRoles = ['Clinician', 'LabTechnician', 'Staff', 'Admin'];
+          if (!allowedRoles.includes(userRole)) {
+            // User is a patient, redirect them to patient portal
+            setErrors({ general: 'This portal is for staff only. Please use the patient portal.' });
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            setIsSubmitting(false);
+            return;
+          }
+        } catch (e) {
+          // If we can't decode token, proceed anyway
+          console.warn('Could not decode token:', e);
+        }
+      }
       navigate('/clinician/dashboard');
     } else {
       setErrors({ general: result.error || 'Login failed. Please check your credentials.' });

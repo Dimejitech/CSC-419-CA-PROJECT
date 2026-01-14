@@ -6,9 +6,10 @@ import { LabTestItemService } from './services/lab-test-item.service';
 import { LabResultService } from './services/lab-result.service';
 import { ResultVerificationService } from './services/result-verification.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotificationModule],
   controllers: [LabController],
   providers: [
     LabService,

@@ -49,6 +49,10 @@ async function main() {
       phone_number: '+1234567890',
       role_id: patientRole.id,
       is_active: true,
+      address: '123 Health Avenue',
+      city: 'Lagos',
+      state: 'Lagos State',
+      zip_code: '100001',
     },
   });
   console.log(`  ✅ Patient: patient@citycare.com`);
@@ -555,7 +559,7 @@ async function main() {
       patient_id: patient2.id,
       encounter_id: encounter2.id,
       total_amount: 275.00,
-      status: 'Pending',
+      status: 'Unpaid',
     },
   });
 
@@ -563,7 +567,7 @@ async function main() {
     data: {
       patient_id: patient.id,
       total_amount: 50.00,
-      status: 'Pending',
+      status: 'Unpaid',
     },
   });
   console.log('✅ Invoices created\n');

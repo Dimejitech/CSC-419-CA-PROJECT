@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
+import { NotificationModule } from '../notification/notification.module';
 import { SchedulingController } from './scheduling.controller';
 import { BookingService } from './services/booking.service';
 import { SlotService } from './services/slot.service';
@@ -36,7 +37,7 @@ import { WalkInManagerService } from './services/walkin-manager.service';
  * - Transaction support for booking operations
  */
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotificationModule],
   controllers: [SchedulingController],
   providers: [
     BookingService,

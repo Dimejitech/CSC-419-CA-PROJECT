@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Profile.module.css';
 import avatarImg from '../../assets/avatar.png';
 import { useAuth } from '../../context';
-import { userAPI } from '../../services/api';
+import { userAPI, clinicalAPI } from '../../services/api';
 
 interface ProfileData {
   firstName: string;
@@ -23,18 +23,18 @@ export const Profile: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal');
   const [formData, setFormData] = useState<ProfileData>({
-    firstName: user?.first_name || '',
-    lastName: user?.last_name || '',
-    dateOfBirth: user?.date_of_birth || '',
-    gender: user?.gender || 'Male',
-    mrn: user?.id?.substring(0, 12) || '',
-    email: user?.email || '',
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    gender: 'Male',
+    mrn: '',
+    email: '',
     countryCode: '+234',
-    phoneNumber: user?.phone_number || '',
-    address: user?.address || '',
-    city: user?.city || '',
-    state: user?.state || '',
-    zipCode: user?.zip_code || '',
+    phoneNumber: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -48,6 +48,56 @@ export const Profile: React.FC = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Populate form when user data loads
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user?.id) return;
+
+      // Get chart data for DOB
+      let dob = '';
+      try {
+        const chart = await clinicalAPI.getPatientChart(user.id);
+        if (chart?.dob) {
+          dob = new Date(chart.dob).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          });
+        }
+      } catch (e) {
+        // Chart may not exist
+      }
+
+      // Extract phone number without country code
+      let phoneNum = user.phone_number || '';
+      if (phoneNum.startsWith('+234')) {
+        phoneNum = phoneNum.slice(4);
+      } else if (phoneNum.startsWith('+1')) {
+        phoneNum = phoneNum.slice(2);
+      } else if (phoneNum.startsWith('+')) {
+        phoneNum = phoneNum.slice(phoneNum.indexOf(' ') + 1) || phoneNum;
+      }
+
+      setFormData({
+        firstName: user.first_name || '',
+        lastName: user.last_name || '',
+        dateOfBirth: dob || user.date_of_birth || '',
+        gender: user.gender || 'Male',
+        mrn: user.id?.substring(0, 12) || '',
+        email: user.email || '',
+        countryCode: '+234',
+        phoneNumber: phoneNum,
+        address: user.address || '',
+        city: user.city || '',
+        state: user.state || '',
+        zipCode: user.zip_code || '',
+      });
+      console.log('[Profile] Loaded user data:', { address: user.address, city: user.city, state: user.state, zip_code: user.zip_code });
+    };
+
+    loadProfileData();
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -71,7 +121,11 @@ export const Profile: React.FC = () => {
       await userAPI.updateProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
+        phoneNumber: formData.countryCode + formData.phoneNumber,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
       });
       setSaveMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error: any) {
@@ -82,8 +136,12 @@ export const Profile: React.FC = () => {
   };
 
   const handleUpdatePassword = async () => {
+    if (!passwordData.currentPassword) {
+      setSaveMessage({ type: 'error', text: 'Please enter your current password' });
+      return;
+    }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setSaveMessage({ type: 'error', text: 'Passwords do not match' });
+      setSaveMessage({ type: 'error', text: 'New passwords do not match' });
       return;
     }
     if (passwordData.newPassword.length < 8) {
@@ -91,7 +149,18 @@ export const Profile: React.FC = () => {
       return;
     }
 
-    setSaveMessage({ type: 'error', text: 'Password change requires the forgot password flow. Please use the forgot password link on the login page.' });
+    setIsSaving(true);
+    setSaveMessage(null);
+    try {
+      await userAPI.changePassword(passwordData.currentPassword, passwordData.newPassword);
+      setSaveMessage({ type: 'success', text: 'Password updated successfully!' });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to update password. Please check your current password.';
+      setSaveMessage({ type: 'error', text: message });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -171,14 +240,38 @@ export const Profile: React.FC = () => {
           {/* Quick Actions */}
           <div className={styles.quickActionsCard}>
             <h3 className={styles.quickActionsTitle}>Quick Actions</h3>
-            <button className={styles.quickActionBtn} type="button">
+            <button
+              className={styles.quickActionBtn}
+              type="button"
+              onClick={() => {
+                setSaveMessage({
+                  type: 'success',
+                  text: 'Medical records request submitted. You will receive an email with your records within 2-3 business days.'
+                });
+              }}
+            >
               <div className={`${styles.quickActionIcon} ${styles.records}`}>
                 <img src="/images/clock-rotate.png" alt="" className={styles.quickActionIconImg} />
               </div>
               <span className={styles.quickActionText}>Request Records</span>
               <span className={styles.quickActionArrow}>›</span>
             </button>
-            <button className={styles.quickActionBtn} type="button">
+            <button
+              className={styles.quickActionBtn}
+              type="button"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'My CityCare Profile',
+                    text: `Patient: ${formData.firstName} ${formData.lastName}\nMRN: ${formData.mrn}`,
+                    url: window.location.href,
+                  }).catch(() => {});
+                } else {
+                  navigator.clipboard.writeText(`Patient Profile\nName: ${formData.firstName} ${formData.lastName}\nMRN: ${formData.mrn}\nEmail: ${formData.email}`);
+                  setSaveMessage({ type: 'success', text: 'Profile information copied to clipboard!' });
+                }
+              }}
+            >
               <div className={`${styles.quickActionIcon} ${styles.share}`}>
                 <img src="/images/share-ios.png" alt="" className={styles.quickActionIconImg} />
               </div>

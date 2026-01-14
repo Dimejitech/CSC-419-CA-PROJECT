@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notification/notification.service';
 import { CreateEncounterDto } from './dto/create-encounter.dto';
 import { UpdateEncounterDto } from './dto/update-encounter.dto';
 import { CreateSoapNoteDto } from './dto/create-soap-note.dto';
@@ -12,7 +13,11 @@ import { CreateAllergyDto } from './dto/create-allergy.dto';
 
 @Injectable()
 export class ClinicalService {
-  constructor(private readonly prisma: PrismaService,private readonly eventEmitter: EventEmitter2,) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   // ============================================
   // PATIENT CHART OPERATIONS
@@ -704,6 +709,15 @@ async updateEncounter(encounterId: string, updateEncounterDto: UpdateEncounterDt
         duration: createPrescriptionDto.duration,
       },
     });
+
+    // Send notification to patient about new prescription
+    const patientId = encounter.patient_charts?.patient_id;
+    if (patientId) {
+      this.notificationService.notifyPrescriptionAdded(patientId, {
+        medicationName: createPrescriptionDto.medicationName,
+        prescriptionId: prescription.id,
+      }).catch(err => console.error('Failed to send prescription notification:', err));
+    }
 
     return prescription;
   }

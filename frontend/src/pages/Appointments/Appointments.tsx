@@ -57,6 +57,7 @@ const CalendarPlusIcon: React.FC<{ size?: number }> = ({ size = 32 }) => (
 export const Appointments: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllPast, setShowAllPast] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -177,7 +178,7 @@ export const Appointments: React.FC = () => {
                 />
                 <div className={styles.doctorDetails}>
                   <span className={styles.doctorName}>
-                    Dr. {upcomingAppointment.clinician?.first_name} {upcomingAppointment.clinician?.last_name}
+                    {upcomingAppointment.clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{upcomingAppointment.clinician?.first_name} {upcomingAppointment.clinician?.last_name}
                   </span>
                   <div className={styles.departmentRow}>
                     <span className={styles.statusDot}></span>
@@ -223,7 +224,9 @@ export const Appointments: React.FC = () => {
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Past Appointments</h2>
           {pastBookings.length > 4 && (
-            <button className={styles.viewMoreBtn} onClick={() => alert('View more past appointments')}>View More</button>
+            <button className={styles.viewMoreBtn} onClick={() => setShowAllPast(!showAllPast)}>
+              {showAllPast ? 'Show Less' : 'View More'}
+            </button>
           )}
         </div>
 
@@ -231,7 +234,7 @@ export const Appointments: React.FC = () => {
           <p style={{ padding: '20px', textAlign: 'center' }}>Loading...</p>
         ) : pastBookings.length > 0 ? (
           <div className={styles.pastAppointmentsGrid}>
-            {pastBookings.slice(0, 4).map((appointment) => (
+            {pastBookings.slice(0, showAllPast ? undefined : 4).map((appointment) => (
               <div key={appointment.id} className={styles.pastCard}>
                 <div className={styles.pastCardHeader}>
                   <img
@@ -243,7 +246,7 @@ export const Appointments: React.FC = () => {
                     <span className={styles.pastDate}>{formatDate(appointment.slot?.startTime || appointment.startTime || '')}</span>
                     <span className={styles.pastTime}>{formatTime(appointment.slot?.startTime || appointment.startTime || '')}</span>
                     <span className={styles.pastDoctor}>
-                      Dr. {appointment.clinician?.first_name} {appointment.clinician?.last_name}
+                      {appointment.clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{appointment.clinician?.first_name} {appointment.clinician?.last_name}
                     </span>
                     <span className={styles.pastDepartment}>
                       {appointment.reasonForVisit || 'General Consultation'}

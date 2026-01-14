@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignUp.css';
 import cityCareLogoWhite from '../../../assets/cityCarelogo.png';
+import { authAPI } from '../../../services/api';
 
 interface FormData {
   fullName: string;
@@ -19,9 +20,11 @@ interface FormErrors {
   password?: string;
   confirmPassword?: string;
   agreeToTerms?: string;
+  general?: string;
 }
 
 const ClinicianSignUp: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -34,6 +37,7 @@ const ClinicianSignUp: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -91,12 +95,39 @@ const ClinicianSignUp: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      // Handle form submission
-      console.log('Form submitted:', formData);
-      // Add your API call here
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      // Split fullName into firstName and lastName
+      const nameParts = formData.fullName.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+
+      // Register with role
+      await authAPI.register({
+        email: formData.email,
+        password: formData.password,
+        firstName,
+        lastName,
+        role: formData.role, // Role is already in correct format from dropdown
+      });
+
+      // Auto-login after registration
+      const loginResult = await authAPI.login(formData.email, formData.password);
+      if (loginResult.accessToken) {
+        // Navigate to clinician dashboard
+        navigate('/clinician/dashboard');
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Registration failed. Please try again.';
+      setErrors({ general: message });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -110,6 +141,20 @@ const ClinicianSignUp: React.FC = () => {
           <p className="subtitle">Set up your account to access the CityCare portal.</p>
 
           <form onSubmit={handleSubmit}>
+            {errors.general && (
+              <div style={{
+                padding: '12px',
+                backgroundColor: '#fee2e2',
+                border: '1px solid #ef4444',
+                borderRadius: '8px',
+                color: '#dc2626',
+                marginBottom: '16px',
+                fontSize: '14px'
+              }}>
+                {errors.general}
+              </div>
+            )}
+
             <div className="form-group">
               <label htmlFor="fullName">
                 Full Name <span className="required">*</span>
@@ -154,9 +199,9 @@ const ClinicianSignUp: React.FC = () => {
                 className={errors.role ? 'error' : ''}
               >
                 <option value="">Select a Role</option>
-                <option value="clinician">Clinician</option>
-                <option value="lab_technician">Lab Technician</option>
-                <option value="admin">Admin</option>
+                <option value="Clinician">Clinician</option>
+                <option value="LabTechnician">Lab Technician</option>
+                <option value="Admin">Admin</option>
               </select>
               {errors.role && <span className="error-message">{errors.role}</span>}
             </div>
@@ -243,8 +288,8 @@ const ClinicianSignUp: React.FC = () => {
               <span className="error-message">{errors.agreeToTerms}</span>
             )}
 
-            <button type="submit" className="submit-button">
-              Create Account
+            <button type="submit" className="submit-button" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </button>
 
             <p className="login-link">

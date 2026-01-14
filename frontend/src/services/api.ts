@@ -399,8 +399,45 @@ export const userAPI = {
     const response = await api.get('/auth/me');
     return response.data;
   },
-  updateProfile: async (data: { firstName?: string; lastName?: string; phoneNumber?: string }) => {
+  updateProfile: async (data: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    email?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  }) => {
     const response = await api.patch('/auth/profile', data);
+    return response.data;
+  },
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    const response = await api.post('/auth/change-password', { currentPassword, newPassword });
+    return response.data;
+  },
+};
+
+// Notification API
+export const notificationAPI = {
+  getNotifications: async (limit = 20) => {
+    const response = await api.get('/notifications', { params: { limit } });
+    return response.data;
+  },
+  getUnreadCount: async () => {
+    const response = await api.get('/notifications/unread-count');
+    return response.data;
+  },
+  markAsRead: async (notificationId: string) => {
+    const response = await api.patch(`/notifications/${notificationId}/read`);
+    return response.data;
+  },
+  markAllAsRead: async () => {
+    const response = await api.post('/notifications/read-all');
+    return response.data;
+  },
+  deleteNotification: async (notificationId: string) => {
+    const response = await api.delete(`/notifications/${notificationId}`);
     return response.data;
   },
 };
