@@ -1,0 +1,729 @@
+/* =========================================
+   BASE STYLES (from AdminDashboard.css)
+   ========================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  background: #f8f9fb;
+  color: #1f2937;
+}
+
+/* HEADER */
+.dashboard-header {
+  height: 72px;
+  padding: 0 32px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-image {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.logo-gradient {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f7f8fa;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  min-width: 320px;
+}
+
+.search-bar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #1f2937;
+  flex: 1;
+}
+
+.search-bar input::placeholder {
+  color: #9ca3af;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notification-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.notification-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.notification-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.header-profile:hover {
+  background: #f9fafb;
+}
+
+.header-profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.profile-info strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.profile-info span {
+  font-size: 12px;
+  color: #0ea5e9;
+  line-height: 1.2;
+}
+
+/* LAYOUT */
+.dashboard-layout {
+  display: flex;
+  min-height: calc(100vh - 72px);
+  gap: 0;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 360px;
+  flex: 0 0 360px;
+  padding: 32px 20px 28px;
+  background: #f8f9fb;
+  border-right: none;
+}
+
+.sidebar-box {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: calc(100vh - 130px);
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(17, 24, 39, 0.08);
+}
+
+.sidebar-header {
+  margin-bottom: 20px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.sidebar-header-panel {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.sidebar-collapse {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 16px 0 10px 0;
+  letter-spacing: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.nav-item.active {
+  background: #38bdf8;
+  color: white;
+}
+
+.nav-item .nav-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-icon {
+  opacity: 1;
+  filter: brightness(0) invert(1);
+  stroke: white;
+}
+
+.logout {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.logout:hover {
+  background: #fef2f2;
+}
+
+.logout .nav-icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(4657%) hue-rotate(347deg) brightness(95%) contrast(91%);
+}
+
+/* FORCE REMOVE LOGO BOX - but keep gradient text */
+.logo {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.logo-image {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* =========================================
+   ROLES & PERMISSIONS SPECIFIC STYLES
+   ========================================= */
+
+.main-content {
+  flex: 1;
+  padding: 28px 36px 28px 40px;
+  background: #f8f9fb;
+  overflow-y: auto;
+}
+
+.roles-permission-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* PAGE HEADER */
+.rp-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.rp-header-text h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.rp-header-text p {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.create-user-btn {
+  padding: 12px 24px;
+  background: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.create-user-btn:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* TABLE CONTAINER */
+.rp-table-container {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px;
+}
+
+.rp-table-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.rp-table-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  position: absolute;
+  left: 20px;
+}
+
+.rp-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f9fafb;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  min-width: 280px;
+}
+
+.rp-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: #1f2937;
+  flex: 1;
+}
+
+.rp-search input::placeholder {
+  color: #9ca3af;
+}
+
+/* TABLE */
+.rp-table {
+  width: 100%;
+}
+
+.rp-table-head {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 1fr 1.3fr 1.2fr;
+  gap: 16px;
+  padding: 10px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rp-th {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.rp-th.last-modified-col {
+  text-align: right;
+  justify-self: end;
+}
+
+.rp-th.actions-col {
+  text-align: right;
+  justify-self: end;
+}
+
+.rp-table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.rp-table-row {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 1fr 1.3fr 1.2fr;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+  align-items: center;
+}
+
+.rp-table-row:hover {
+  background: #f9fafb;
+}
+
+.rp-table-row:last-child {
+  border-bottom: none;
+}
+
+.rp-td {
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.role-name {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.role-description {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.active-users-badge {
+  display: inline-flex;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.last-modified-text {
+  color: #6b7280;
+  font-size: 13px;
+  text-align: right;
+}
+
+.rp-td.last-modified-col {
+  justify-self: end;
+  text-align: right;
+}
+
+.rp-td.actions-col {
+  justify-self: end;
+  text-align: right;
+}
+
+.edit-permissions-btn {
+  padding: 8px 16px;
+  background: transparent;
+  color: #0ea5e9;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-permissions-btn:hover {
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+/* TABLE FOOTER */
+.rp-table-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.view-more-btn {
+  padding: 8px 16px;
+  background: transparent;
+  color: #0ea5e9;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-more-btn:hover {
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+/* STATS CARDS */
+.rp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.rp-stat-card {
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid;
+  transition: transform 0.2s;
+}
+
+.rp-stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.blue-card {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+}
+
+.orange-card {
+  background: #fed7aa;
+  border-color: #fdba74;
+}
+
+.purple-card {
+  background: #e9d5ff;
+  border-color: #d8b4fe;
+}
+
+.stat-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+
+.blue-card .stat-icon-wrapper {
+  background: #93c5fd;
+  color: white;
+}
+
+.orange-card .stat-icon-wrapper {
+  background: #fdba74;
+  color: white;
+}
+
+.purple-card .stat-icon-wrapper {
+  background: #c084fc;
+  color: white;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.stat-detail {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .rp-table-head,
+  .rp-table-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .rp-th {
+    display: none;
+  }
+
+  .rp-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .rp-page-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .create-user-btn {
+    width: 100%;
+  }
+
+  .rp-search {
+    min-width: 180px;
+  }
+}
+
+/* ================================
+   STATS GRID SPACING (TOP PLACEMENT)
+   ================================ */
+
+.rp-stats-grid {
+  margin-bottom: 24px !important;
+}
+
+/* ============================================
+   ADD THIS TO ALL YOUR CSS FILES
+   (AdminDashboard.css, RolesPermission.css, etc.)
+   ============================================ */
+
+/* Find the .dashboard-header section in each CSS file and add this line: */
+
+.dashboard-header {
+  height: 72px;
+  padding: 0 32px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #e5e7eb;  /* <-- ADD THIS LINE */
+}
+
+/* ============================================
+   OR simply add this at the bottom of each CSS file:
+   ============================================ */
+
+.dashboard-header {
+  border-bottom: 1px solid #e5e7eb;
+}

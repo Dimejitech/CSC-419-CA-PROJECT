@@ -1,0 +1,1009 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  background: #f8f9fb;
+  color: #1f2937;
+}
+
+/* HEADER */
+.dashboard-header {
+  height: 72px;
+  padding: 0 32px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Logo image — NO box */
+.logo-image {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+/* Gradient CityCare text */
+.logo-gradient {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.02em;
+}
+
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f7f8fa;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  min-width: 320px;
+}
+
+.search-bar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #1f2937;
+  flex: 1;
+}
+
+.search-bar input::placeholder {
+  color: #9ca3af;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notification-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.notification-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.header-profile:hover {
+  background: #f9fafb;
+}
+
+.header-profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.profile-info strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.profile-info span {
+  font-size: 12px;
+  color: #0ea5e9;
+  line-height: 1.2;
+}
+
+/* LAYOUT */
+.dashboard-layout {
+  display: flex;
+  min-height: calc(100vh - 72px);
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 360px;
+  flex: 0 0 360px;      /* ✅ keeps space reserved so it won't collide */
+  padding: 32px 20px;
+  background: #f8f9fb;
+  border-right: none;
+}
+
+
+
+.sidebar-box {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: calc(100vh - 160px);
+
+  /* ✅ ADD THESE */
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(17, 24, 39, 0.08);
+}
+
+
+.sidebar-header {
+  margin-bottom: 20px;
+  padding: 0;                /* ✅ no inner padding here */
+  background: transparent;   /* ✅ remove double background */
+  border-radius: 0;
+}
+
+
+.sidebar-header-panel {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 18px;
+
+  background: #f8fafc;              /* ✅ visible box */
+  border: 1px solid #e5e7eb;        /* ✅ border */
+  border-radius: 14px;              /* ✅ rounded */
+}
+
+
+
+.sidebar-collapse {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sidebar-header img {
+  width: 20px;
+  height: 20px;
+}
+
+/* Navigation text */
+.sidebar-title {
+  margin-left: auto;          /* ✅ pushes it to the right */
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+
+.nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 16px 0 10px 0;
+  letter-spacing: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.nav-item.active {
+  background: #38bdf8;
+  color: white;
+}
+
+.nav-item .nav-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+}
+
+.nav-item.active .nav-icon {
+  opacity: 1;
+  filter: brightness(0) invert(1);
+}
+
+.logout {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.logout:hover {
+  background: #fef2f2;
+}
+
+.logout .nav-icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(4657%) hue-rotate(347deg) brightness(95%) contrast(91%);
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex: 1;
+  padding: 24px;
+  background: #fff;
+}
+
+.dashboard-inner {
+  max-width: 1200px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.page-header p {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.highlight {
+  color: #0ea5e9;
+  font-weight: 600;
+}
+
+/* STATS GRID */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;              /* ✅ vertical center */
+  gap: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;                   /* ✅ prevents resizing */
+}
+
+
+.stat-content {
+  display: flex;
+  flex-direction: column;           /* ✅ stack vertically */
+  gap: 6px;
+  flex: 1;
+}
+
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;   /* title left, badge right */
+}
+
+.stat-content small {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-content h2 {
+  font-size: 26px;                  /* 🔥 slightly bolder */
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.1;
+}
+
+.stat-change {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;             /* pill shape */
+  background: #f0fdf4;
+}
+
+
+/* CONTENT GRID */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 20px;
+}
+
+/* ACTIVITY CARD (OUTER BOX) */
+.activity-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  overflow: hidden;     
+  height: 440px;         /* clips inner dividers */
+
+  /* ❌ removed fixed height */
+  /* ❌ removed flex + scrolling layout */
+}
+
+
+.activity-section h2 {
+  font-size: 20px;        /* keep current size */
+  font-weight: 700;       /* strong like before */
+  color: #111827;         /* full dark (same as main headings) */
+  margin: 0;
+}
+
+
+
+
+.section-header {
+  display: flex;
+  justify-content: space-between;   /* ✅ pushes ends apart */
+  align-items: center;              /* ✅ vertical alignment */
+  padding: 22px 28px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+
+
+/* LIST */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ROW */
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 28px;           /* smaller than before */
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+
+/* Remove last divider */
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+/* LEFT CONTENT */
+.activity-content strong {
+  font-size: 17px;        /* ⬇ smaller than header */
+  font-weight: 600;
+  color: #111827;
+  display: block;
+  margin-bottom: 8px;
+}
+
+
+.activity-content p {
+  font-size: 15px;        /* ⬇ clearly secondary */
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+
+.activity-time {
+  font-size: 13px;        /* ⬇ smallest text in the card */
+  font-weight: 600;
+  color: #b3b3b3;
+  white-space: nowrap;
+}
+
+/* EMPTY SPACER ROW AT BOTTOM */
+.activity-spacer {
+  height: 64px;                  /* ✅ visible empty row */
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+
+/* VERIFICATION SECTION */
+.verification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.verify-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;            /* vertical spacing only */
+  background: transparent;    /* ✅ remove grey */
+  border-radius: 0;
+}
+.verify-row:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+
+
+
+.verify-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.verify-info strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.verify-info small {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.verify-btn {
+  padding: 8px 16px;
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.verify-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #1f2937;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 12px;
+  background: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primary-btn:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .search-bar {
+    min-width: 200px;
+  }
+}
+
+
+/* ===== REMOVE DIVIDER BETWEEN SIDEBAR & DASHBOARD ===== */
+.sidebar {
+  border-right: none !important;
+}
+
+.dashboard-layout {
+  gap: 0 !important; /* removes visual gutter */
+}
+
+.main-content {
+  padding-left: 24px; /* optional – adjust to 16px if you want tighter */
+}
+
+
+
+
+/* 🔥 REMOVE LOGO BOX BUT KEEP GRADIENT TEXT */
+.logo {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.logo-image {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.stat-icon-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+
+
+.view-all-link {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0ea5e9;                   /* ✅ blue */
+  text-decoration: none;
+}
+
+.view-all-link:hover {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+
+/* ================================
+   FORCE EMPTY ROW TO SHOW
+   (paste at the VERY bottom)
+   ================================ */
+
+.activity-list .activity-spacer {
+  display: block !important;
+  height: 72px !important;        /* adjust: 56/64/72/80 */
+  background: #fff !important;
+  border-top: 1px solid #e5e7eb !important;
+  flex-shrink: 0 !important;      /* ✅ prevents collapsing */
+}
+
+
+/* ================================
+   SIDEBAR HEIGHT TUNING (override)
+   Taller, but with bottom breathing room
+   ================================ */
+
+.sidebar {
+  padding-bottom: 28px; /* creates space under the white box */
+}
+
+.sidebar-box {
+  min-height: calc(100vh - 130px); /* ✅ taller box */
+  max-height: calc(100vh - 140px); /* keeps it from touching bottom */
+  overflow-y: auto;                /* optional if content grows */
+}
+
+
+ /* ================================
+   FORCE VERIFICATION QUEUE CARD BOX
+   (paste at VERY bottom)
+   ================================ */
+
+
+.verification-section {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+
+  border-radius: 14px !important;
+  padding: 16px 18px !important;
+
+  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.05) !important;
+
+  height: 270px;                 /* ✅ about half the previous height */
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* remove the grey blocks behind rows */
+.verify-row {
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 14px 0 !important;
+}
+
+/* optional: clean separators instead */
+.verify-row:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+
+.notification-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+/* ================================
+   STATS ROW — match screenshot
+   (paste at VERY bottom)
+   ================================ */
+
+/* Make the dashboard area wide enough */
+.dashboard-inner{
+  max-width: 100% !important;  /* remove the 1200px squeeze */
+}
+
+/* Force 4 cards in one row (like screenshot) */
+.stats-grid{
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+}
+
+/* Keep card height consistent + align content nicely */
+.stat-card{
+  height: 92px !important;
+  padding: 18px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Prevent text from pushing layout weirdly */
+.stat-content{
+  min-width: 0 !important;
+}
+
+.stat-header small{
+  white-space: nowrap !important;
+}
+
+/* Responsive fallback */
+@media (max-width: 1100px){
+  .stats-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px){
+  .stats-grid{
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* Activity card (outer box) */
+.activity-section {
+  border-radius: 16px;        /* was 20px */
+}
+
+/* Header spacing */
+.section-header {
+  padding: 18px 22px;        /* was 22px 28px */
+}
+
+/* Each activity row */
+.activity-item {
+  padding: 18px 22px;        /* was 22px 28px */
+}
+
+/* Empty spacer at bottom */
+.activity-spacer {
+  height: 40px;              /* was ~64px+ */
+}
+
+/* ================================
+   STATS CARD COLORED RIMS
+   ================================ */
+
+/* 1️⃣ Total Users — Blue */
+.stats-grid .stat-card:nth-child(1) {
+  border: 1.5px solid #93c5fd;   /* soft blue */
+}
+
+/* 2️⃣ Active Clinicians — Orange */
+.stats-grid .stat-card:nth-child(2) {
+  border: 1.5px solid #fdba74;   /* soft orange */
+}
+
+/* 3️⃣ Active Patients — Purple */
+.stats-grid .stat-card:nth-child(3) {
+  border: 1.5px solid #c4b5fd;   /* soft purple */
+}
+
+/* 4️⃣ Pending Verifications — Green */
+.stats-grid .stat-card:nth-child(4) {
+  border: 1.5px solid #86efac;   /* soft green */
+}
+
+.stat-card {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+/* ================================
+   SLIGHTLY TALLER STATS CARDS
+   ================================ */
+
+.stat-card {
+  height: 104px !important;        /* was ~92px */
+  padding: 18px 20px !important;  /* adds breathing room */
+}
+
+/* Stat card layout */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Top row */
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Bottom row */
+.stat-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stat-card {
+  padding-top: 12px !important;
+}
+
+.stat-header {
+  margin-bottom: 4px !important;
+}
+
+.stat-card {
+  overflow: hidden; /* ✅ CRITICAL */
+}
+
+.stat-icon {
+  width: 44px;      /* was ~48px */
+  height: 44px;
+  border-radius: 12px;
+}
+.stat-body {
+  align-items: center;
+  margin-top: -4px; /* ✅ pulls content UP */
+}
+/* ================================
+   LEFT-ALIGN STAT CARD CONTENT
+   ================================ */
+
+/* Ensure card content starts from left */
+.stat-card {
+  align-items: flex-start !important;
+  text-align: left;
+}
+
+/* Header row: title left, badge next to it */
+.stat-header {
+  justify-content: flex-start !important;
+  gap: 10px;                  /* space between title & badge */
+}
+
+/* Bottom row: icon + number aligned left */
+.stat-body {
+  justify-content: flex-start !important;
+  align-items: center;
+}
+
+/* Ensure text blocks don’t center themselves */
+.stat-card small,
+.stat-card h2 {
+  text-align: left;
+}
+
+/* Prevent icon from drifting */
+.stat-icon {
+  margin-left: 0 !important;
+}
+
+/* ================================
+   TYPOGRAPHY SCALE — ACTIVITY + VERIFICATION
+   ================================ */
+
+/* ===== Recent System Activity ===== */
+
+/* Card title */
+.activity-section h2 {
+  font-size: 18px !important;   /* was ~20px */
+  font-weight: 600 !important;
+}
+
+/* Activity item title */
+.activity-content strong {
+  font-size: 15px !important;   /* was ~17px */
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Activity description */
+.activity-content p {
+  font-size: 14px !important;   /* was ~15px */
+  line-height: 1.45;
+}
+
+/* Time text */
+.activity-time {
+  font-size: 12px !important;   /* was ~13px */
+  font-weight: 600;
+}
+
+
+/* ===== Verification Queue ===== */
+
+/* Card title */
+.verification-section h2 {
+  font-size: 18px !important;   /* was larger */
+  font-weight: 600;
+}
+
+/* Name */
+.verify-info strong {
+  font-size: 14px !important;   /* was ~15px */
+}
+
+/* Department */
+.verify-info small {
+  font-size: 12px !important;   /* was ~13px */
+}
+
+
+
+
+/* ============================================
+   ADD THIS TO ALL YOUR CSS FILES
+   (AdminDashboard.css, RolesPermission.css, etc.)
+   ============================================ */
+
+/* Find the .dashboard-header section in each CSS file and add this line: */
+
+.dashboard-header {
+  height: 72px;
+  padding: 0 32px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #e5e7eb;  /* <-- ADD THIS LINE */
+}
+
+/* ============================================
+   OR simply add this at the bottom of each CSS file:
+   ============================================ */
+
+.dashboard-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+

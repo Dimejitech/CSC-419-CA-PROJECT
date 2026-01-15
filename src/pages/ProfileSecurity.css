@@ -1,0 +1,339 @@
+/* ProfileSecurity.css */
+
+
+/* Security Password Form */
+.security-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ProfileSecurity.css */
+
+/* ===== Change Password Card Wrapper ===== */
+.profile-form-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 28px;
+}
+
+
+/* Password Input Wrapper */
+.security-password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.security-password-input-wrapper:focus-within {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.security-password-input-wrapper input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #1f2937;
+  background: transparent;
+  border-radius: 8px;
+}
+
+.security-password-input-wrapper input::placeholder {
+  color: #9ca3af;
+}
+
+.security-password-input-wrapper input:disabled {
+  color: #9ca3af;
+  background-color: #f9fafb;
+  cursor: not-allowed;
+}
+
+/* Password Toggle Button */
+.security-toggle-password {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.security-toggle-password:hover:not(:disabled) {
+  color: #0ea5e9;
+}
+
+.security-toggle-password:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Password Grid Layout */
+.security-password-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Error Message */
+.security-error-message {
+  display: block;
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* Password Requirements Box */
+.security-password-requirements {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.security-requirements-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 12px 0;
+}
+
+.security-requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.security-requirements-list li {
+  font-size: 13px;
+  color: #6b7280;
+  padding-left: 24px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.security-requirements-list li::before {
+  content: '•';
+  position: absolute;
+  left: 8px;
+  color: #9ca3af;
+  font-weight: bold;
+}
+
+.security-requirements-list li.met {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.security-requirements-list li.met::before {
+  content: '✓';
+  color: #10b981;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Update Password Button */
+.security-btn-update-password {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+}
+
+.security-btn-update-password:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+  transform: translateY(-1px);
+}
+
+.security-btn-update-password:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.security-btn-update-password:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .security-password-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .security-password-requirements {
+    padding: 16px;
+  }
+
+  .security-requirements-list li {
+    font-size: 12px;
+  }
+}
+
+/* Integration with existing form styles */
+.profile-main-card .security-password-form {
+  margin-top: 0;
+}
+
+.profile-main-card .security-password-form .form-group {
+  margin-bottom: 0;
+}
+
+.profile-main-card .security-password-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.profile-main-card .security-password-form .full-width {
+  grid-column: 1 / -1;
+}
+
+/* Animation for requirement checks */
+@keyframes checkmark {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.security-requirements-list li.met::before {
+  animation: checkmark 0.3s ease-out;
+}
+
+/* Focus states for accessibility */
+.security-toggle-password:focus {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.security-btn-update-password:focus {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+/* Loading state (optional - for future use) */
+.security-btn-update-password.loading {
+  position: relative;
+  color: transparent;
+}
+
+.security-btn-update-password.loading::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin-left: -10px;
+  margin-top: -10px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Header row: Change Password  |  Edit Info ===== */
+.profile-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.profile-section-title {
+  margin: 0;
+}
+
+/* Edit Info button (same class you used in TSX: profile-editBtn) */
+.profile-editBtn {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.profile-editBtn:hover {
+  background: #f3f4f6;
+}
+
+
+.profile-editBtn {
+  padding: 6px 22px;
+  min-width: 110px;
+  text-align: center;
+}
+ 
+/* ============================================
+   ADD THIS TO ALL YOUR CSS FILES
+   (AdminDashboard.css, RolesPermission.css, etc.)
+   ============================================ */
+
+/* Find the .dashboard-header section in each CSS file and add this line: */
+
+.dashboard-header {
+  height: 72px;
+  padding: 0 32px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #e5e7eb;  /* <-- ADD THIS LINE */
+}
+
+/* ============================================
+   OR simply add this at the bottom of each CSS file:
+   ============================================ */
+
+.dashboard-header {
+  border-bottom: 1px solid #e5e7eb;
+}
