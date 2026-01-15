@@ -1,25 +1,37 @@
 # CityCare Healthcare Management System
 
-A full-stack healthcare management system built with NestJS (backend) and React + Vite (frontend).
+A full-stack healthcare management system built with NestJS (backend) and React + Vite (frontend). The system implements Domain-Driven Design (DDD) principles with a modular monolithic architecture.
+
+## Key Features
+
+- **4 User Portals:** Patient, Clinician, Lab Technician, and Admin dashboards
+- **Role-Based Permissions:** 31 granular permissions across 6 categories
+- **Automatic Audit Logging:** PostgreSQL triggers capture all data changes
+- **Secure Authentication:** JWT tokens with password reset functionality
+- **Complete Healthcare Workflow:** Appointments → Encounters → Lab Orders → Results → Billing
 
 ## Project Structure
 
 ```
 CSC-419-CA-PROJECT/
 ├── src/                    # Backend source code (NestJS)
-│   ├── iam/               # Identity & Access Management
+│   ├── iam/               # Identity & Access Management (auth, password reset)
 │   ├── scheduling/        # Appointment scheduling
 │   ├── clinical/          # Clinical/patient management
 │   ├── billing/           # Billing & invoices
 │   ├── lab/               # Laboratory orders & results
-│   └── admin/             # Admin functionality
+│   ├── admin/             # Admin & permissions management
+│   └── notification/      # Notifications system
 ├── frontend/              # Frontend source code (React + Vite)
 │   └── src/
-│       ├── pages/         # Page components
-│       ├── components/    # Reusable components
+│       ├── pages/         # Page components (Patient, Clinician, Admin, Technician)
+│       ├── components/    # Reusable components (Modals, Search, Notifications)
 │       ├── services/      # API services
 │       └── context/       # React context
-├── prisma/                # Database schema
+├── prisma/                # Database schema & seeds
+│   ├── schema.prisma      # Database models
+│   ├── seed.ts            # Demo data & permissions seeding
+│   └── setup-audit-triggers.sql  # Automatic audit logging triggers
 └── CityCareFinalDatabase  # PostgreSQL database dump
 ```
 
@@ -233,40 +245,49 @@ curl -X POST http://localhost:3000/iam/register \
 
 ## Features
 
-### Patient Features
-- View and book appointments
-- View medical records
-- View lab results
-- View and pay bills
-- Manage profile
+### Patient Portal
+- Book and manage appointments with calendar view
+- View medical records and prescriptions
+- View verified lab results with abnormality flags
+- View invoices and billing history
+- Profile management with password reset
+- In-app notifications
 
-### Clinician Features
-- View daily schedule and appointments
-- Manage patients
-- Create encounters and SOAP notes
-- Order lab tests
-- Write prescriptions
+### Clinician Portal
+- Dashboard with today's appointments and pending tasks
+- Patient search and chart management
+- Create encounters with SOAP notes and vitals
+- Order lab tests and verify results
+- Write prescriptions with dosage instructions
+- Manage appointment schedule and slots
 
-### Admin Features
-- User management
-- System audit logs
-- Roles and permissions management
+### Admin Portal
 - Dashboard with system statistics
+- User management (create, edit, activate/deactivate)
+- Roles and permissions management (31 permissions across 6 categories)
+- Comprehensive audit logs with filtering
+- Global search functionality
 
-### Lab Technician Features
-- View and process lab orders
-- Enter and verify test results
-- Dashboard with pending orders
-- Profile management
+### Lab Technician Portal
+- Dashboard with pending orders and statistics
+- Process lab orders and update status
+- Upload and manage test results
+- View patient information for orders
+- Profile and notification management
 
 ---
 
 ## API Endpoints
 
 ### Authentication
-- `POST /iam/register` - Register new user
-- `POST /iam/login` - Login
-- `POST /iam/refresh` - Refresh token
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login
+- `POST /auth/refresh` - Refresh token
+- `POST /auth/forgot-password` - Request password reset
+- `POST /auth/reset-password` - Reset password with token
+- `POST /auth/change-password` - Change password (authenticated)
+- `GET /auth/me` - Get current user profile
+- `PATCH /auth/profile` - Update profile
 
 ### Scheduling
 - `GET /scheduling/clinicians` - Get all clinicians
@@ -283,9 +304,21 @@ curl -X POST http://localhost:3000/iam/register \
 ### Labs
 - `GET /lab/orders` - Get lab orders
 - `POST /lab/orders` - Create lab order
+- `GET /lab/results` - Get all lab results (technician)
+- `PUT /lab/results/:id/verify` - Verify lab result
 
 ### Billing
 - `GET /billing/invoices/patient/:id` - Get patient invoices
+
+### Admin
+- `GET /admin/dashboard` - Get dashboard statistics
+- `GET /admin/users` - Get all users
+- `PATCH /admin/users/:id/status` - Activate/deactivate user
+- `PATCH /admin/users/:id/role` - Assign role to user
+- `GET /admin/permissions` - Get all permissions
+- `GET /admin/roles/:roleId/permissions` - Get role permissions
+- `PUT /admin/roles/:roleId/permissions` - Update role permissions
+- `GET /admin/audit-logs` - Get audit logs
 
 ---
 
@@ -322,23 +355,34 @@ npx prisma db push --force-reset
 
 ## Seeding the Database
 
-To create all demo accounts in the database, run:
+To create all demo accounts and permissions in the database, run:
 
 ```bash
 # From project root
-npm run seed
+npx ts-node prisma/seed.ts
 ```
 
 This will create:
-- 3 Patient accounts
-- 2 Clinician accounts
-- 1 Admin account
-- 1 Lab Technician account
+- 4 Roles (Patient, Clinician, Admin, LabTechnician)
+- 31 Permissions across 6 categories (dashboard, users, appointments, patients, lab, billing, system)
+- Default permission assignments for each role
+- Demo user accounts for testing
 - Sample patient charts, appointments, lab orders, and more
+
+### Setting Up Audit Logging
+
+To enable automatic audit logging via PostgreSQL triggers:
+
+```bash
+# Connect to your database and run the triggers script
+psql -d citycare_db -f prisma/setup-audit-triggers.sql
+```
+
+This creates triggers on all key tables to automatically log INSERT, UPDATE, and DELETE operations.
 
 **To reset and reseed the database:**
 ```bash
-npm run db:reset
+npx prisma db push --force-reset && npx ts-node prisma/seed.ts
 ```
 
 ---
