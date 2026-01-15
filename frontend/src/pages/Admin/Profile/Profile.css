@@ -1,0 +1,2071 @@
+/* =========================================
+   BASE STYLES (Inherited from AuditLogs.css)
+   ========================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  background: #f8f9fb;
+  color: #1f2937;
+}
+
+/* HEADER */
+.dashboard-header {
+  height: 72px;
+  padding: 0 32px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.logo-image {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.logo-gradient {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f7f8fa;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  min-width: 320px;
+}
+
+.search-bar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #1f2937;
+  flex: 1;
+}
+
+.search-bar input::placeholder {
+  color: #9ca3af;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notification-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.notification-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.notification-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.header-profile:hover {
+  background: #f9fafb;
+}
+
+.header-profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.profile-info strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.profile-info span {
+  font-size: 12px;
+  color: #0ea5e9;
+  line-height: 1.2;
+}
+
+/* LAYOUT */
+.dashboard-layout {
+  display: flex;
+  min-height: calc(100vh - 72px);
+  gap: 0;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 360px;
+  flex: 0 0 360px;
+  padding: 32px 20px 28px;
+  background: #f8f9fb;
+  border-right: none;
+}
+
+.sidebar-box {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: calc(100vh - 130px);
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(17, 24, 39, 0.08);
+}
+
+.sidebar-header {
+  margin-bottom: 20px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.sidebar-header-panel {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.sidebar-collapse {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 16px 0 10px 0;
+  letter-spacing: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.nav-item.active {
+  background: #38bdf8;
+  color: white;
+}
+
+.nav-item .nav-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-icon {
+  opacity: 1;
+  filter: brightness(0) invert(1);
+  stroke: white;
+}
+
+.logout {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.logout:hover {
+  background: #fef2f2;
+}
+
+.logout .nav-icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(4657%) hue-rotate(347deg) brightness(95%) contrast(91%);
+}
+
+/* =========================================
+   PROFILE SPECIFIC STYLES
+   ========================================= */
+
+.main-content {
+  flex: 1;
+  padding: 32px 40px;
+  background: #f8f9fb;
+  overflow-y: auto;
+}
+
+.profile-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* PAGE HEADER */
+.profile-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.profile-header-left {
+  flex: 1;
+}
+
+.profile-page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.profile-page-header p {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.breadcrumb-link {
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.breadcrumb-link:hover {
+  color: #0ea5e9;
+}
+
+.breadcrumb-separator {
+  color: #9ca3af;
+}
+
+.breadcrumb-current {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.save-changes-btn {
+  padding: 12px 24px;
+  background: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.save-changes-btn:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* TABS AND SAVE BUTTON ROW */
+.profile-tabs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-tab {
+  padding: 10px 20px;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profile-tab:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.profile-tab.active {
+  background: #0ea5e9;
+  color: white;
+}
+
+/* PROFILE CONTENT */
+.profile-content {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+}
+
+/* LEFT SIDEBAR CARD */
+.profile-sidebar-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.profile-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 24px;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #f3f4f6;
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 32px;
+  height: 32px;
+  background: #0ea5e9;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.avatar-edit-btn:hover {
+  background: #0284c7;
+  transform: scale(1.05);
+}
+
+.profile-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.profile-email {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.profile-badge {
+  display: inline-flex;
+  padding: 6px 16px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* QUICK ACTIONS */
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quick-actions h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.quick-action-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.quick-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.request-icon {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.share-icon {
+  background: #ede9fe;
+  color: #6b21a8;
+}
+
+.arrow-right {
+  margin-left: auto;
+  color: #9ca3af;
+}
+
+/* RIGHT MAIN CARD */
+.profile-main-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.profile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.profile-card-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.edit-info-btn {
+  padding: 8px 16px;
+  background: transparent;
+  color: #0ea5e9;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-info-btn:hover {
+  background: #f0f9ff;
+  border-color: #0ea5e9;
+}
+
+/* FORM STYLES */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-row-three {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select {
+  padding: 12px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  transition: all 0.2s;
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-group input:not(:disabled):hover,
+.form-group select:not(:disabled):hover {
+  border-color: #d1d5db;
+}
+
+.form-group input:not(:disabled):focus,
+.form-group select:not(:disabled):focus {
+  outline: none;
+  border-color: #0ea5e9;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+/* INPUT WITH ICON */
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon input {
+  padding-right: 40px;
+}
+
+.input-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* SELECT WRAPPER */
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* PHONE INPUT */
+.phone-input-group {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+}
+
+.phone-code-wrapper {
+  position: relative;
+}
+
+.phone-code-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 12px 32px 12px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.phone-code-select:hover {
+  border-color: #d1d5db;
+}
+
+.phone-code-select:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.select-arrow-small {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.phone-number-input {
+  flex: 1;
+}
+
+/* SECTION DIVIDER */
+.section-divider {
+  padding: 24px 0 8px;
+  margin-top: 8px;
+}
+
+.section-divider h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .profile-content {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .phone-input-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-page-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .save-changes-btn {
+    width: 100%;
+  }
+
+  .profile-tabs {
+    overflow-x: auto;
+  }
+}
+
+.profile-left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick-actions-card {
+  padding: 24px;
+}
+
+.quick-actions-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+/* ================================
+   FINAL PROFILE CARD OVERRIDES
+   (PASTE AT BOTTOM)
+   ================================ */
+
+.profile-left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ---------- JOHN DOE CARD ---------- */
+.profile-sidebar-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.profile-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.profile-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #f3f4f6;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  background: #0ea5e9;
+  border: 3px solid #ffffff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.avatar-edit-btn img {
+  width: 14px;
+  height: 14px;
+}
+
+.profile-name {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.profile-email {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.profile-badge {
+  margin-top: 10px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---------- QUICK ACTIONS CARD ---------- */
+.quick-actions-card {
+  padding: 18px;
+}
+
+.quick-actions-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 14px;
+}
+
+.quick-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: #eef6ff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-action-btn + .quick-action-btn {
+  margin-top: 12px;
+}
+
+.quick-action-btn:hover {
+  background: #e6f1ff;
+}
+
+.quick-action-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.request-icon {
+  background: #dbeafe;
+}
+
+.share-icon {
+  background: #ede9fe;
+}
+
+.arrow-right {
+  margin-left: auto;
+  font-size: 20px;
+  color: #111827;
+  opacity: 0.75;
+}
+
+
+/* ================================
+   JOHN DOE CARD – SMALLER VERSION
+   ================================ */
+
+/* Reduce overall card padding */
+.profile-left-column .profile-sidebar-card:first-child {
+  padding: 16px;
+}
+
+/* Smaller avatar */
+.profile-left-column .profile-avatar {
+  width: 72px;
+  height: 72px;
+  border: 3px solid #f3f4f6;
+}
+
+/* Smaller pencil button */
+.profile-left-column .avatar-edit-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  bottom: 4px;
+  right: 4px;
+}
+
+.profile-left-column .avatar-edit-btn img {
+  width: 12px;
+  height: 12px;
+}
+
+/* Reduce name + email sizes */
+.profile-left-column .profile-name {
+  margin-top: 8px;
+  font-size: 17px;
+}
+
+.profile-left-column .profile-email {
+  font-size: 12px;
+}
+
+/* Smaller badge */
+.profile-left-column .profile-badge {
+  margin-top: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+/* Tighten vertical spacing */
+.profile-left-column .profile-avatar-section {
+  gap: 2px;
+}
+
+/* ================================
+   REDUCE WIDTH OF LEFT PROFILE CARDS
+   ================================ */
+
+/* Constrain the left column width */
+.profile-left-column {
+  max-width: 300px;        /* ← adjust to 280px if you want tighter */
+  width: 100%;
+}
+
+/* Ensure both cards respect the width */
+.profile-left-column .profile-sidebar-card {
+  width: 100%;
+}
+
+/* Optional: center cards within grid column */
+.profile-content {
+  align-items: flex-start;
+}
+
+
+/* ================================
+   REDUCE SPACE BETWEEN SIDEBAR
+   AND MAIN PROFILE CONTENT
+   ================================ */
+
+/* Reduce horizontal gap in main layout */
+.dashboard-layout {
+  gap: 12px; /* was effectively too large */
+}
+
+/* Reduce left padding of main content */
+.main-content {
+  padding-left: 20px; /* reduce from 40px+ */
+}
+
+/* Optional: tighten profile inner container */
+.profile-inner {
+  margin-left: 0;
+}
+
+/* ================================
+   WIDER RIGHT PANEL + COMPACT FORM
+   (PASTE AT BOTTOM)
+   ================================ */
+
+/* Give more space to the right (Personal Information) */
+.profile-content {
+  grid-template-columns: 300px 1fr; /* left smaller, right bigger */
+  gap: 22px;
+}
+
+/* Make the main card feel wider and less padded */
+.profile-main-card {
+  padding: 22px;
+}
+
+/* Header spacing tighter */
+.profile-card-header {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+}
+
+/* Compact form spacing */
+.profile-form {
+  gap: 14px;
+}
+
+/* Reduce row gap + make inputs slightly shorter */
+.form-row {
+  gap: 16px;
+}
+
+/* Labels smaller + tighter */
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: -2px;
+}
+
+/* Inputs: shorter height + less padding */
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+/* Date input icon position stays nice */
+.input-with-icon input {
+  padding-right: 38px;
+}
+
+/* Section headings more compact */
+.section-divider {
+  padding: 16px 0 6px;
+  margin-top: 6px;
+}
+
+.section-divider h3 {
+  font-size: 16px;
+}
+
+/* Phone input tighter */
+.phone-input-group {
+  gap: 10px;
+}
+
+.phone-code-select {
+  padding: 10px 30px 10px 12px;
+  font-size: 13px;
+}
+
+/* Optional: reduce rounding a tiny bit to match screenshot feel */
+.profile-main-card,
+.profile-sidebar-card {
+  border-radius: 14px;
+}
+
+/* =========================================
+   FIX SECTION HEADINGS & CARD CONSISTENCY
+   (PASTE AT BOTTOM)
+   ========================================= */
+
+/* Ensure both sections are clearly separate cards */
+.profile-main-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* SAME heading size for Personal & Contact Information */
+.profile-card-header h2,
+.section-divider h3 {
+  font-size: 18px;          /* same size */
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Remove visual dominance from Personal Information */
+.profile-card-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Contact Information spacing */
+.section-divider {
+  padding: 18px 0 10px;
+  margin-top: 12px;
+}
+
+/* Make both cards feel equally weighted */
+.profile-main-card + .profile-main-card {
+  margin-top: 22px;
+}
+
+/* Compact form spacing to match image */
+.profile-form {
+  gap: 14px;
+}
+
+.form-row {
+  gap: 16px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Inputs tighter + consistent */
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+/* Edit Info button should not overpower heading */
+.edit-info-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+
+.profile-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ================================
+   MOVE CONTACT INFO CARD UP
+   ================================ */
+
+/* Reduce gap between Personal Info and Contact Info */
+.profile-right-column {
+  gap: 14px; /* was ~22px */
+}
+
+/* Optional: remove extra top spacing on Contact card */
+.profile-right-column .profile-main-card:last-child {
+  margin-top: 0;
+}
+
+/* =========================================
+   PERSONAL INFORMATION – COMPACT VERSION
+   (PASTE AT BOTTOM)
+   ========================================= */
+
+/* Remove the line under "Personal Information" */
+.profile-main-card .profile-card-header {
+  border-bottom: none;     /* ← removes the line */
+  padding-bottom: 0;
+  margin-bottom: 12px;
+}
+
+/* Make the Personal Info card tighter */
+.profile-main-card {
+  padding: 20px;           /* reduce overall padding */
+}
+
+/* Reduce vertical spacing inside the form */
+.profile-form {
+  gap: 12px;
+}
+
+/* Tighter grid rows */
+.form-row {
+  gap: 14px;
+}
+
+/* Labels: slightly smaller and closer to inputs */
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #374151;
+}
+
+/* Inputs: shorter height + compact feel */
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+/* Date input icon alignment */
+.input-with-icon input {
+  padding-right: 36px;
+}
+
+/* Reduce spacing before Staff ID */
+.form-group.full-width {
+  margin-top: 2px;
+}
+
+/* Make header text slightly calmer (matches screenshot) */
+.profile-card-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #374151;
+}
+
+/* Edit button less dominant */
+.edit-info-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+
+
+/* =========================================
+   GENDER SELECT – CLEAN & COMPACT STYLE
+   ========================================= */
+
+/* Wrapper */
+.select-wrapper {
+  position: relative;
+}
+
+/* Select input */
+.select-wrapper select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  padding: 10px 40px 10px 12px; /* space for arrow */
+  font-size: 14px;
+  color: #9ca3af;              /* placeholder-like text */
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  cursor: pointer;
+}
+
+/* When enabled & focused */
+.select-wrapper select:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+/* Hover stays calm */
+.select-wrapper select:hover {
+  border-color: #e5e7eb;
+}
+
+/* Arrow icon */
+.select-wrapper .select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Arrow color */
+.select-wrapper .select-arrow path {
+  stroke: #6b7280;
+}
+
+/* Disabled state (when not editing) */
+.select-wrapper select:disabled {
+  background: #ffffff;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   FIX CURSOR (REMOVE EMOJI / POINTER ICON)
+   ========================================= */
+
+/* Force proper text cursor on all form inputs */
+input,
+select,
+textarea {
+  cursor: text !important;
+}
+
+/* Selects should not inherit button cursor */
+.select-wrapper select {
+  cursor: text !important;
+}
+
+/* Remove any custom cursor inheritance */
+.form-group,
+.profile-form {
+  cursor: default;
+}
+
+/* =========================================
+   TIGHTEN PERSONAL & CONTACT INFORMATION
+   ========================================= */
+
+/* Reduce padding inside BOTH right-side cards */
+.profile-right-column .profile-main-card {
+  padding: 16px 18px;
+}
+
+/* Tighten card headers */
+.profile-card-header {
+  margin-bottom: 8px;
+  padding-bottom: 0;
+}
+
+/* Make headings feel compact */
+.profile-card-header h2 {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+/* Reduce vertical spacing in forms */
+.profile-form {
+  gap: 10px;
+}
+
+/* Reduce spacing between rows */
+.form-row {
+  gap: 12px;
+}
+
+/* Labels closer to inputs */
+.form-group label {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+/* Inputs more compact */
+.form-group input,
+.form-group select {
+  padding: px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+/* Date input icon alignment */
+.input-with-icon input {
+  padding-right: 34px;
+}
+
+/* Phone input spacing */
+.phone-input-group {
+  gap: 8px;
+}
+
+.phone-code-select {
+  padding: 8px 28px 8px 12px;
+  font-size: 13px;
+}
+
+/* Reduce extra space before wide fields */
+.form-group.full-width {
+  margin-top: 0;
+}
+
+/* Slightly reduce spacing between the two cards */
+.profile-right-column {
+  gap: 12px;
+}
+
+/* =========================================
+   CONTACT INFORMATION – EXTRA COMPACT
+   ========================================= */
+
+/* Target ONLY the Contact Information card */
+.profile-right-column .profile-main-card.contact-card {
+  padding: 14px 18px;
+}
+
+/* Tighten header spacing */
+.profile-right-column .profile-main-card.contact-card
+.profile-card-header {
+  margin-bottom: 6px;
+  padding-bottom: 0;
+}
+
+/* Reduce spacing inside the contact form */
+.profile-right-column .profile-main-card.contact-card
+.profile-form {
+  gap: 8px;
+}
+
+/* Bring rows closer */
+.profile-right-column .profile-main-card.contact-card
+.form-row {
+  gap: 10px;
+}
+
+/* Labels closer to inputs */
+.profile-right-column .profile-main-card.contact-card
+.form-group label {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+/* Make inputs shorter */
+.profile-right-column .profile-main-card.contact-card
+.form-group input,
+.profile-right-column .profile-main-card.contact-card
+.form-group select {
+  padding: 7px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+/* Phone number row tighter */
+.profile-right-column .profile-main-card.contact-card
+.phone-input-group {
+  gap: 6px;
+}
+
+.profile-right-column .profile-main-card.contact-card
+.phone-code-select {
+  padding: 7px 26px 7px 12px;
+}
+
+
+/* =========================================
+   PERSONAL INFORMATION – EXTRA COMPACT
+   ========================================= */
+
+/* Target ONLY Personal Information card */
+.profile-right-column .profile-main-card:not(.contact-card) {
+  padding: 14px 18px;
+}
+
+/* Tighten header spacing */
+.profile-right-column .profile-main-card:not(.contact-card)
+.profile-card-header {
+  margin-bottom: 6px;
+  padding-bottom: 0;
+}
+
+/* Reduce spacing inside the form */
+.profile-right-column .profile-main-card:not(.contact-card)
+.profile-form {
+  gap: 8px;
+}
+
+/* Bring rows closer */
+.profile-right-column .profile-main-card:not(.contact-card)
+.form-row {
+  gap: 10px;
+}
+
+/* Labels closer to inputs */
+.profile-right-column .profile-main-card:not(.contact-card)
+.form-group label {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+/* Shorter inputs */
+.profile-right-column .profile-main-card:not(.contact-card)
+.form-group input,
+.profile-right-column .profile-main-card:not(.contact-card)
+.form-group select {
+  padding: 7px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+/* Reduce extra space above Staff ID */
+.profile-right-column .profile-main-card:not(.contact-card)
+.form-group.full-width {
+  margin-top: 0;
+}
+
+/* =========================================
+   CONTACT INFORMATION – ULTRA COMPACT
+   ========================================= */
+
+/* Contact card padding (smaller box) */
+.profile-right-column .profile-main-card.contact-card {
+  padding: 10px 14px;
+}
+
+/* Header tighter */
+.profile-right-column .profile-main-card.contact-card
+.profile-card-header {
+  margin-bottom: 4px;
+  padding-bottom: 0;
+}
+
+/* Compact form spacing */
+.profile-right-column .profile-main-card.contact-card
+.profile-form {
+  gap: 6px;
+}
+
+/* Rows closer together */
+.profile-right-column .profile-main-card.contact-card
+.form-row {
+  gap: 8px;
+}
+
+/* Labels very tight */
+.profile-right-column .profile-main-card.contact-card
+.form-group label {
+  font-size: 12.5px;
+  margin-bottom: 1px;
+  line-height: 1.2;
+}
+
+/* Inputs shorter */
+.profile-right-column .profile-main-card.contact-card
+.form-group input,
+.profile-right-column .profile-main-card.contact-card
+.form-group select {
+  padding: 6px 10px;
+  font-size: 12.5px;
+  border-radius: 8px;
+}
+
+/* Phone row even tighter */
+.profile-right-column .profile-main-card.contact-card
+.phone-input-group {
+  gap: 5px;
+}
+
+.profile-right-column .profile-main-card.contact-card
+.phone-code-select {
+  padding: 6px 24px 6px 10px;
+  font-size: 12.5px;
+}
+
+/* Remove extra spacing above address */
+.profile-right-column .profile-main-card.contact-card
+.form-group.full-width {
+  margin-top: 0;
+}
+
+/* =========================================
+   CONTACT INFORMATION – MAXIMUM COMPACT
+   ========================================= */
+
+/* Smallest safe padding */
+.profile-right-column .profile-main-card.contact-card {
+  padding: 8px 12px;
+}
+
+/* Header almost flush */
+.profile-right-column .profile-main-card.contact-card
+.profile-card-header {
+  margin-bottom: 3px;
+  padding-bottom: 0;
+}
+
+/* Extremely tight form stack */
+.profile-right-column .profile-main-card.contact-card
+.profile-form {
+  gap: 4px;
+}
+
+/* Rows very close */
+.profile-right-column .profile-main-card.contact-card
+.form-row {
+  gap: 6px;
+}
+
+/* Labels minimal */
+.profile-right-column .profile-main-card.contact-card
+.form-group label {
+  font-size: 12px;
+  margin-bottom: 1px;
+  line-height: 1.1;
+}
+
+/* Inputs shortest usable height */
+.profile-right-column .profile-main-card.contact-card
+.form-group input,
+.profile-right-column .profile-main-card.contact-card
+.form-group select {
+  padding: 5px 9px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+/* Phone input ultra tight */
+.profile-right-column .profile-main-card.contact-card
+.phone-input-group {
+  gap: 4px;
+}
+
+.profile-right-column .profile-main-card.contact-card
+.phone-code-select {
+  padding: 5px 22px 5px 9px;
+  font-size: 12px;
+}
+
+/* Kill any leftover vertical margins */
+.profile-right-column .profile-main-card.contact-card
+.form-group,
+.profile-right-column .profile-main-card.contact-card
+.form-group.full-width {
+  margin: 0;
+}
+
+/* =========================================
+   CONTACT INFO – TIGHT BUT FULLY VISIBLE
+   ========================================= */
+
+/* Slightly increase usable height by reducing padding smartly */
+.profile-right-column .profile-main-card.contact-card {
+  padding: 10px 14px 12px; /* extra bottom room */
+}
+
+/* Header compact */
+.profile-right-column .profile-main-card.contact-card
+.profile-card-header {
+  margin-bottom: 4px;
+}
+
+/* Form stack tightened but not collapsing */
+.profile-right-column .profile-main-card.contact-card
+.profile-form {
+  gap: 6px;
+}
+
+/* Row spacing tuned to fit City/State/Zip */
+.profile-right-column .profile-main-card.contact-card
+.form-row {
+  gap: 8px;
+}
+
+/* Labels readable & compact */
+.profile-right-column .profile-main-card.contact-card
+.form-group label {
+  font-size: 12.5px;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+/* Inputs compact but clickable */
+.profile-right-column .profile-main-card.contact-card
+.form-group input,
+.profile-right-column .profile-main-card.contact-card
+.form-group select {
+  padding: 6px 10px;
+  font-size: 12.5px;
+  border-radius: 8px;
+}
+
+/* Phone input spacing */
+.profile-right-column .profile-main-card.contact-card
+.phone-input-group {
+  gap: 6px;
+}
+
+.profile-right-column .profile-main-card.contact-card
+.phone-code-select {
+  padding: 6px 24px 6px 10px;
+}
+
+/* Ensure bottom row is never clipped */
+.profile-right-column .profile-main-card.contact-card {
+  overflow: visible;
+}
+
+/* =========================================
+   CONTACT INFO – MORE VISIBLE (BALANCED)
+   ========================================= */
+
+/* Give the card a bit more vertical room */
+.profile-right-column .profile-main-card.contact-card {
+  padding: 14px 16px 18px; /* extra bottom space */
+}
+
+/* Slightly loosen form spacing */
+.profile-right-column .profile-main-card.contact-card
+.profile-form {
+  gap: 10px;
+}
+
+/* Rows breathe a little */
+.profile-right-column .profile-main-card.contact-card
+.form-row {
+  gap: 12px;
+}
+
+/* Labels clearer */
+.profile-right-column .profile-main-card.contact-card
+.form-group label {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+/* Inputs still compact but taller */
+.profile-right-column .profile-main-card.contact-card
+.form-group input,
+.profile-right-column .profile-main-card.contact-card
+.form-group select {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+/* City / State / Zip row clearly visible */
+.profile-right-column .profile-main-card.contact-card
+.form-row-three {
+  margin-top: 4px;
+}
+
+/* =========================================
+   FIX CLIPPING – CITY / STATE / ZIP
+   ========================================= */
+
+/* Ensure contact card can grow fully */
+.profile-right-column .profile-main-card.contact-card {
+  height: auto !important;
+  min-height: unset !important;
+  overflow: visible !important;
+  padding-bottom: 20px;
+}
+
+/* Ensure form itself never clips */
+.profile-right-column .profile-main-card.contact-card
+.profile-form {
+  overflow: visible;
+}
+
+/* City / State / Zip row visibility */
+.profile-right-column .profile-main-card.contact-card
+.form-row-three {
+  margin-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* Labels must always show */
+.profile-right-column .profile-main-card.contact-card
+.form-row-three label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+/* Prevent parent containers from cutting content */
+.profile-content,
+.profile-right-column {
+  overflow: visible;
+}
+
+/* =========================================
+   TABS IN WHITE CONTAINER WITH BORDER
+   ========================================= */
+
+.profile-tabs {
+  display: inline-flex !important;
+  gap: 12px !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.profile-tab {
+  padding: 12px 32px !important;
+  background: transparent !important;
+  color: #6b7280 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+}
+
+.profile-tab:hover {
+  background: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+.profile-tab.active {
+  background: #0ea5e9 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(14, 165, 233, 0.25) !important;
+}
+
+
+/* =========================================
+   ALIGN JOHN DOE CARD WITH PERSONAL INFO BOX
+   ========================================= */
+
+/* Move everything up by reducing top spacing */
+.profile-inner {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.profile-tabs-row {
+  margin-top: 0 !important;
+  margin-bottom: 20px !important;
+}
+
+.profile-content {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  align-items: flex-start !important;
+}
+
+/* Align John Doe card top with Personal Information heading */
+.profile-left-column {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.profile-left-column .profile-sidebar-card:first-child {
+  margin-top: 0 !important;
+}
+
+/* Align Personal Information box */
+.profile-right-column {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.profile-form-section:first-child {
+  margin-top: 0 !important;
+}
+
+/* Ensure both columns start at same vertical position */
+.profile-content {
+  display: grid !important;
+  grid-template-columns: 300px 1fr !important;
+  gap: 22px !important;
+  align-items: start !important;
+}
+
+/* =========================================
+   MOVE EVERYTHING HIGHER
+   ========================================= */
+
+/* Reduce space after tabs */
+.profile-tabs-row {
+  margin-bottom: 16px !important;
+}
+
+/* Move profile content up more */
+.profile-content {
+  margin-top: -4px !important;
+}
+
+/* Remove any spacing from page header */
+.profile-page-header {
+  margin-bottom: 16px !important;
+}
+
+/* Tighten spacing before tabs */
+.profile-inner > p {
+  margin-bottom: 16px !important;
+}
+
+/* =========================================
+   MOVE TABS & SAVE BUTTON HIGHER
+   ========================================= */
+
+.profile-tabs-row {
+  margin-top: -8px !important;
+  margin-bottom: 12px !important;
+}
+
+/* =========================================
+   SAVE CHANGES BUTTON - SAME BLUE AS PERSONAL INFO
+   ========================================= */
+
+.save-changes-btn {
+  padding: 14px 48px !important;
+  background: #0ea5e9 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  white-space: nowrap !important;
+  min-width: 180px !important;
+}
+
+.save-changes-btn:hover {
+  background: #0284c7 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
+}
+
+/* =========================================
+   ACTIVE PATIENT BADGE - DEEP GREEN TEXT & SKY GREEN BG
+   ========================================= */
+
+.profile-badge {
+  background-color: #a7f3d0 !important;
+  color: #065f46 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  padding: 6px 16px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-top: 10px !important;
+}
+
+
+/* =========================================
+   FURTHER REDUCE SPACE BETWEEN SIDEBAR AND PROFILE
+   ========================================= */
+
+.main-content {
+  padding-left: 12px !important; /* Further reduced from 24px */
+}
+
+.sidebar {
+  padding-right: 12px !important; /* Reduce right padding of sidebar */
+}
+
+.dashboard-layout {
+  gap: 0 !important; /* Remove gap between sidebar and main content */
+}
+
+/* =========================================
+   MAKE ENTIRE PROFILE PAGE BACKGROUND WHITE
+   ========================================= */
+
+body {
+  background: #ffffff !important;
+}
+
+.dashboard-layout {
+  background: #ffffff !important;
+}
+
+.main-content {
+  background: #ffffff !important;
+}
+
+.sidebar {
+  background: #ffffff !important;
+}
+
+.profile-inner {
+  background: #ffffff !important;
+}
+
+
+/* ============================================
+   ADD THIS TO ALL YOUR CSS FILES
+   (AdminDashboard.css, RolesPermission.css, etc.)
+   ============================================ */
+
+/* Find the .dashboard-header section in each CSS file and add this line: */
+
+.dashboard-header {
+  height: 72px;
+  padding: 0 32px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #e5e7eb;  /* <-- ADD THIS LINE */
+}
+
+/* ============================================
+   OR simply add this at the bottom of each CSS file:
+   ============================================ */
+
+.dashboard-header {
+  border-bottom: 1px solid #e5e7eb;
+}

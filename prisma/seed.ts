@@ -24,12 +24,18 @@ async function main() {
       update: {},
       create: { name: 'Admin' },
     }),
+    prisma.roles.upsert({
+      where: { name: 'LabTechnician' },
+      update: {},
+      create: { name: 'LabTechnician' },
+    }),
   ]);
   console.log('✅ Roles created\n');
 
   const patientRole = roles.find(r => r.name === 'Patient')!;
   const clinicianRole = roles.find(r => r.name === 'Clinician')!;
   const adminRole = roles.find(r => r.name === 'Admin')!;
+  const labTechnicianRole = roles.find(r => r.name === 'LabTechnician')!;
 
   // Hash password
   const passwordHash = await bcrypt.hash('password123', 10);
@@ -133,7 +139,23 @@ async function main() {
       is_active: true,
     },
   });
-  console.log(`  ✅ Admin: admin@citycare.com\n`);
+  console.log(`  ✅ Admin: admin@citycare.com`);
+
+  // Lab Technician
+  const labTechnician = await prisma.users.upsert({
+    where: { email: 'technician@citycare.com' },
+    update: {},
+    create: {
+      email: 'technician@citycare.com',
+      password_hash: passwordHash,
+      first_name: 'Peter',
+      last_name: 'Parker',
+      phone_number: '+1666666666',
+      role_id: labTechnicianRole.id,
+      is_active: true,
+    },
+  });
+  console.log(`  ✅ LabTechnician: technician@citycare.com\n`);
 
   // Create patient charts
   console.log('Creating patient charts...');
@@ -593,10 +615,11 @@ async function main() {
   console.log('----------------------------------------');
   console.log('Patient:   patient@citycare.com');
   console.log('Patient:   john.doe@citycare.com');
-  console.log('Patient:   jane.smith@citycare.com');
-  console.log('Clinician: clinician@citycare.com');
-  console.log('Clinician: dr.williams@citycare.com');
-  console.log('Admin:     admin@citycare.com');
+  console.log('Patient:       jane.smith@citycare.com');
+  console.log('Clinician:     clinician@citycare.com');
+  console.log('Clinician:     dr.williams@citycare.com');
+  console.log('Admin:         admin@citycare.com');
+  console.log('LabTechnician: technician@citycare.com');
   console.log('----------------------------------------\n');
 }
 

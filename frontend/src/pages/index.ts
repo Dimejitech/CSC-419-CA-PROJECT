@@ -24,6 +24,22 @@ export {
   ClinicianProfile,
 } from './Clinician';
 
-// Placeholder pages for teammates to implement
-// Export these as your teammates create them:
-// export { Help } from './Help/Help';
+// Admin Pages
+export {
+  AdminSignIn,
+  AdminDashboard,
+  AdminUserManagement,
+  AdminRolesPermissions,
+  AdminAuditLogs,
+  AdminProfile,
+} from './Admin';
+
+// Technician Pages
+export {
+  TechnicianSignIn,
+  TechnicianSignUp,
+  TechnicianDashboard,
+  TechnicianLabOrders,
+  TechnicianResults,
+  TechnicianProfile,
+} from './Technician';

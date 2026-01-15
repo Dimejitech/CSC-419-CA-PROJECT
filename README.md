@@ -139,6 +139,7 @@ Use these accounts to test the application:
 | **Email** | `patient@citycare.com` |
 | **Password** | `password123` |
 | **Role** | Patient |
+| **Portal** | http://localhost:5173/signin |
 
 ### Clinician Account
 | Field | Value |
@@ -146,6 +147,7 @@ Use these accounts to test the application:
 | **Email** | `clinician@citycare.com` |
 | **Password** | `password123` |
 | **Role** | Clinician |
+| **Portal** | http://localhost:5173/clinician/signin |
 
 ### Admin Account
 | Field | Value |
@@ -153,6 +155,15 @@ Use these accounts to test the application:
 | **Email** | `admin@citycare.com` |
 | **Password** | `password123` |
 | **Role** | Admin |
+| **Portal** | http://localhost:5173/admin/signin |
+
+### Lab Technician Account
+| Field | Value |
+|-------|-------|
+| **Email** | `technician@citycare.com` |
+| **Password** | `password123` |
+| **Role** | LabTechnician |
+| **Portal** | http://localhost:5173/technician/signin |
 
 ---
 
@@ -165,7 +176,13 @@ If the demo accounts don't exist in your database, you can create them:
 2. Fill in the registration form
 3. Log in with your new credentials
 
-### Option 2: Create via API
+### Option 2: Run the Database Seed (Recommended)
+```bash
+# This creates ALL demo accounts at once
+npm run seed
+```
+
+### Option 3: Create via API
 ```bash
 # Create a Patient account
 curl -X POST http://localhost:3000/iam/register \
@@ -187,6 +204,28 @@ curl -X POST http://localhost:3000/iam/register \
     "firstName": "Dr. Demo",
     "lastName": "Clinician",
     "role": "Clinician"
+  }'
+
+# Create an Admin account
+curl -X POST http://localhost:3000/iam/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@citycare.com",
+    "password": "password123",
+    "firstName": "System",
+    "lastName": "Admin",
+    "role": "Admin"
+  }'
+
+# Create a Lab Technician account
+curl -X POST http://localhost:3000/iam/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "technician@citycare.com",
+    "password": "password123",
+    "firstName": "Peter",
+    "lastName": "Parker",
+    "role": "LabTechnician"
   }'
 ```
 
@@ -211,7 +250,14 @@ curl -X POST http://localhost:3000/iam/register \
 ### Admin Features
 - User management
 - System audit logs
-- Role assignment
+- Roles and permissions management
+- Dashboard with system statistics
+
+### Lab Technician Features
+- View and process lab orders
+- Enter and verify test results
+- Dashboard with pending orders
+- Profile management
 
 ---
 
@@ -270,6 +316,65 @@ npx prisma generate
 
 # Reset database (WARNING: deletes all data)
 npx prisma db push --force-reset
+```
+
+---
+
+## Seeding the Database
+
+To create all demo accounts in the database, run:
+
+```bash
+# From project root
+npm run seed
+```
+
+This will create:
+- 3 Patient accounts
+- 2 Clinician accounts
+- 1 Admin account
+- 1 Lab Technician account
+- Sample patient charts, appointments, lab orders, and more
+
+**To reset and reseed the database:**
+```bash
+npm run db:reset
+```
+
+---
+
+## CI/CD Pipeline (GitHub Actions)
+
+This project uses GitHub Actions for Continuous Integration. The pipeline automatically runs on every push and pull request.
+
+### How to Use GitHub Actions
+
+1. **Push your code to GitHub:**
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   git push origin main
+   ```
+
+2. **View the CI pipeline:**
+   - Go to your GitHub repository
+   - Click on the **"Actions"** tab
+   - View the running/completed workflows
+
+### What the CI Pipeline Does
+
+| Job | Description |
+|-----|-------------|
+| **Frontend Build** | Installs dependencies, runs TypeScript check, builds the React app |
+| **Backend Build** | Installs dependencies, generates Prisma client, builds NestJS app, runs tests |
+| **Code Quality** | Runs linting on both frontend and backend |
+| **E2E Tests** | (Main branch only) Sets up test database, runs migrations, seeds data, runs E2E tests |
+
+### CI Status Badge
+
+Add this to your README to show CI status:
+```markdown
+![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)
 ```
 
 ---
