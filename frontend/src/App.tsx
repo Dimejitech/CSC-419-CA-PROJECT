@@ -19,6 +19,18 @@ import {
   ClinicianPatients,
   ClinicianAppointments,
   ClinicianProfile,
+  AdminSignIn,
+  AdminDashboard,
+  AdminUserManagement,
+  AdminRolesPermissions,
+  AdminAuditLogs,
+  AdminProfile,
+  TechnicianSignIn,
+  TechnicianSignUp,
+  TechnicianDashboard,
+  TechnicianLabOrders,
+  TechnicianResults,
+  TechnicianProfile,
 } from './pages';
 import { DashboardLayout } from './layouts';
 import { ProtectedRoute } from './components';
@@ -76,6 +88,62 @@ function App() {
         <Route path="/clinician/profile" element={
           <ProtectedRoute requiredRole="Clinician">
             <ClinicianProfile />
+          </ProtectedRoute>
+        } />
+
+        {/* Admin Authentication Routes (no sidebar/header) */}
+        <Route path="/admin/signin" element={<AdminSignIn />} />
+
+        {/* Admin Dashboard Routes (each page has its own embedded sidebar/header) */}
+        <Route path="/admin/dashboard" element={
+          <ProtectedRoute requiredRole="Admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/user-management" element={
+          <ProtectedRoute requiredRole="Admin">
+            <AdminUserManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/roles-permissions" element={
+          <ProtectedRoute requiredRole="Admin">
+            <AdminRolesPermissions />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/audit-logs" element={
+          <ProtectedRoute requiredRole="Admin">
+            <AdminAuditLogs />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/profile" element={
+          <ProtectedRoute requiredRole="Admin">
+            <AdminProfile />
+          </ProtectedRoute>
+        } />
+
+        {/* Technician Authentication Routes (no sidebar/header) */}
+        <Route path="/technician/signin" element={<TechnicianSignIn />} />
+        <Route path="/technician/signup" element={<TechnicianSignUp />} />
+
+        {/* Technician Dashboard Routes (each page has its own embedded sidebar/header) */}
+        <Route path="/technician/dashboard" element={
+          <ProtectedRoute requiredRole="LabTechnician">
+            <TechnicianDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/technician/lab-orders" element={
+          <ProtectedRoute requiredRole="LabTechnician">
+            <TechnicianLabOrders />
+          </ProtectedRoute>
+        } />
+        <Route path="/technician/results" element={
+          <ProtectedRoute requiredRole="LabTechnician">
+            <TechnicianResults />
+          </ProtectedRoute>
+        } />
+        <Route path="/technician/profile" element={
+          <ProtectedRoute requiredRole="LabTechnician">
+            <TechnicianProfile />
           </ProtectedRoute>
         } />
 

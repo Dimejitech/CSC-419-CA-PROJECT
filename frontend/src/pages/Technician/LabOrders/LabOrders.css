@@ -1,0 +1,151 @@
+/* Lab Orders Specific Styles */
+
+.lab-filters-section {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.lab-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.lab-filter-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.lab-filter-select {
+  padding: 10px 16px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #FFFFFF;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.lab-filter-select:focus {
+  outline: none;
+  border-color: #00A8E8;
+}
+
+.lab-date-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lab-calendar-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 16px;
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.lab-date-input {
+  width: 100%;
+  padding: 10px 16px 10px 40px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #FFFFFF;
+  cursor: pointer;
+}
+
+.lab-date-input:focus {
+  outline: none;
+  border-color: #00A8E8;
+}
+
+.lab-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: none;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.lab-reset-btn:hover {
+  background-color: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+/* Pagination */
+.lab-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.lab-pagination-btn {
+  padding: 10px 20px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  background-color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lab-pagination-btn:hover:not(:disabled) {
+  background-color: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+.lab-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lab-pagination-btn.primary {
+  background-color: #00A8E8;
+  color: #FFFFFF;
+  border-color: #00A8E8;
+}
+
+.lab-pagination-btn.primary:hover:not(:disabled) {
+  background-color: #0090C7;
+  border-color: #0090C7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lab-filters-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lab-filter-group {
+    min-width: 100%;
+  }
+
+  .lab-reset-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lab-pagination {
+    justify-content: center;
+  }
+}
