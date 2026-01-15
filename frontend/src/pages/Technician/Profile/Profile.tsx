@@ -77,18 +77,18 @@ const Profile: React.FC = () => {
   useEffect(() => {
     if (user) {
       setProfileData({
-        firstName: user.first_name || user.firstName || '',
-        lastName: user.last_name || user.lastName || '',
-        dateOfBirth: user.date_of_birth || user.dateOfBirth || '',
-        gender: user.gender || '',
+        firstName: user.first_name || (user as any).firstName || '',
+        lastName: user.last_name || (user as any).lastName || '',
+        dateOfBirth: (user as any).date_of_birth || (user as any).dateOfBirth || '',
+        gender: (user as any).gender || '',
         staffId: user.id?.slice(0, 8).toUpperCase() || '',
         email: user.email || '',
-        phone: user.phone || '',
+        phone: user.phone_number || (user as any).phone || '',
         countryCode: '+234',
         address: user.address || '',
         city: user.city || '',
         state: user.state || '',
-        zipCode: user.zipCode || user.zip_code || '',
+        zipCode: user.zip_code || (user as any).zipCode || '',
       });
     }
   }, [user]);

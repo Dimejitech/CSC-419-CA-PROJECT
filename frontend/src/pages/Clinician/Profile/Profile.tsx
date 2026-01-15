@@ -171,9 +171,7 @@ const Profile: React.FC = () => {
           city: profileData.city,
           state: profileData.state,
           zipCode: profileData.zipCode,
-          dateOfBirth: profileData.dateOfBirth || undefined,
-          gender: profileData.gender || undefined,
-        });
+        } as any);
         setSaveMessage({ type: 'success', text: 'Profile updated successfully!' });
         setIsEditing(false);
       }

@@ -62,7 +62,7 @@ const Results: React.FC = () => {
           id: result.id || `temp-${Math.random()}`,
           patientName,
           test: testName,
-          resultStatus: isAbnormal ? 'Abnormal' : 'Normal',
+          resultStatus: (isAbnormal ? 'Abnormal' : 'Normal') as 'Abnormal' | 'Normal',
           reviewedByClinician: result.is_verified || false,
           dateSubmitted,
           resultValue: result.result_value || 'N/A',
@@ -70,8 +70,8 @@ const Results: React.FC = () => {
         };
       });
 
-      setAllResults(transformedResults);
-      setResults(transformedResults);
+      setAllResults(transformedResults as Result[]);
+      setResults(transformedResults as Result[]);
     } catch (error) {
       console.error('Error fetching lab results:', error);
     } finally {
