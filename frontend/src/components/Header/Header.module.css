@@ -41,12 +41,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 320px;
+  width: 380px;
   height: 44px;
   padding: 12px;
   background-color: var(--color-bg-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  position: relative;
 }
 
 .searchInput {
@@ -61,6 +62,113 @@
 
 .searchInput::placeholder {
   color: var(--color-text-muted);
+}
+
+/* Search Results Dropdown */
+.searchResults {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  max-height: 380px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.searchResultItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.searchResultItem:last-child {
+  border-bottom: none;
+}
+
+.searchResultItem:hover {
+  background: linear-gradient(135deg, rgba(3, 165, 255, 0.08) 0%, rgba(31, 193, 107, 0.08) 100%);
+}
+
+.searchResultIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.searchResultIconAppointment {
+  background: linear-gradient(135deg, #03A5FF 0%, #0284c7 100%);
+}
+
+.searchResultIconMedical {
+  background: linear-gradient(135deg, #22C55E 0%, #16a34a 100%);
+}
+
+.searchResultIconLab {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7c3aed 100%);
+}
+
+.searchResultIconBilling {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.searchResultIconNotification {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+}
+
+.searchResultContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.searchResultTitle {
+  font-weight: 600;
+  font-size: 13px;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.searchResultSubtitle {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.searchResultCategory {
+  font-size: 10px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.searchResultCategory::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: linear-gradient(135deg, #03A5FF 0%, #1FC16B 100%);
+  border-radius: 50%;
+}
+
+.searchNoResults {
+  padding: 20px 14px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
 }
 
 .headerRight {

@@ -17,6 +17,11 @@ export class ResultVerificationService {
           include: {
             lab_orders: {
               include: {
+                lab_test_items: {
+                  include: {
+                    lab_results: true,
+                  },
+                },
                 patient_encounters: {
                   include: {
                     patient_charts: true,
@@ -40,6 +45,23 @@ export class ResultVerificationService {
         verified_by: verifiedByUserId,
       },
     });
+
+    // Check if all results for this order are now verified
+    const labOrder = result.lab_test_items?.lab_orders;
+    if (labOrder) {
+      const allResults = labOrder.lab_test_items?.flatMap(item => item.lab_results) || [];
+      // Count verified results (including the one we just verified)
+      const verifiedCount = allResults.filter(r => r.is_verified || r.id === resultId).length;
+      const totalResults = allResults.length;
+
+      // If all results are verified, mark order as Completed
+      if (verifiedCount >= totalResults && totalResults > 0) {
+        await this.prisma.lab_orders.update({
+          where: { id: labOrder.id },
+          data: { status: 'Completed' },
+        });
+      }
+    }
 
     // Send notification to patient
     const patientId = result.lab_test_items?.lab_orders?.patient_encounters?.patient_charts?.patient_id;

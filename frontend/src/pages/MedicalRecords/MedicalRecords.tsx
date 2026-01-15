@@ -16,14 +16,15 @@ interface Diagnosis {
 
 interface Encounter {
   id: string;
-  encounter_date: string;
-  chief_complaint: string;
+  date: string;
   status: string;
-  clinician?: {
+  users?: {
     id: string;
     first_name: string;
     last_name: string;
   };
+  patient_notes_soap?: SoapNote[];
+  patient_prescriptions?: Prescription[];
 }
 
 interface Allergy {
@@ -56,15 +57,7 @@ interface PatientChart {
   allergies?: string[];
   patient_allergies?: Allergy[];
   diagnoses?: Diagnosis[];
-  encounters?: Encounter[];
-  patient_encounters?: Array<{
-    id: string;
-    date: string;
-    status: string;
-    users?: { first_name: string; last_name: string };
-    patient_notes_soap?: SoapNote[];
-    patient_prescriptions?: Prescription[];
-  }>;
+  patient_encounters?: Encounter[];
 }
 
 // Red circle icon for diagnosis
@@ -89,6 +82,8 @@ export const MedicalRecords: React.FC = () => {
   const [encounters, setEncounters] = useState<Encounter[]>([]);
   const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEncounter, setSelectedEncounter] = useState<Encounter | null>(null);
+  const [dateFilter, setDateFilter] = useState<string>('60'); // Default 60 days
   const { user } = useAuth();
 
   useEffect(() => {
@@ -96,14 +91,17 @@ export const MedicalRecords: React.FC = () => {
       if (!user?.id) return;
 
       try {
-        const [chartData, encountersData, labData] = await Promise.all([
+        const [chartData, labData] = await Promise.all([
           clinicalAPI.getPatientChart(user.id).catch(() => null),
-          clinicalAPI.getPatientEncounters(user.id).catch(() => []),
           labAPI.getPatientResults(user.id).catch(() => []),
         ]);
 
         setChart(chartData);
-        setEncounters(encountersData || []);
+
+        // Use encounters from chart data (already included in the response)
+        const encountersFromChart = chartData?.patient_encounters || [];
+        setEncounters(encountersFromChart);
+
         setLabResults(labData || []);
       } catch (error) {
         console.error('Error fetching medical data:', error);
@@ -115,8 +113,10 @@ export const MedicalRecords: React.FC = () => {
     fetchMedicalData();
   }, [user?.id]);
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Date not available';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -150,6 +150,16 @@ export const MedicalRecords: React.FC = () => {
       duration: p.duration,
     })) || []
   ).filter((m, i, arr) => arr.findIndex(x => x.name === m.name) === i) || []; // Remove duplicates
+
+  // Filter encounters by date
+  const filteredEncounters = encounters.filter(encounter => {
+    if (dateFilter === 'all') return true;
+    const encounterDate = new Date(encounter.date);
+    const now = new Date();
+    const daysAgo = parseInt(dateFilter, 10);
+    const cutoffDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+    return encounterDate >= cutoffDate;
+  });
 
   return (
     <div className={styles.container}>
@@ -215,11 +225,15 @@ export const MedicalRecords: React.FC = () => {
 
           {activeTab === 'visit-history' && (
             <div className={styles.filterDropdown}>
-              <select className={styles.filterSelect}>
-                <option>Last 30 days</option>
-                <option>Last 60 days</option>
-                <option>Last 90 days</option>
-                <option>All time</option>
+              <select
+                className={styles.filterSelect}
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+              >
+                <option value="30">Last 30 days</option>
+                <option value="60">Last 60 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="all">All time</option>
               </select>
             </div>
           )}
@@ -317,31 +331,44 @@ export const MedicalRecords: React.FC = () => {
             {/* Visit History Tab Content */}
             {activeTab === 'visit-history' && (
               <div className={styles.visitHistory}>
-                {encounters.length > 0 ? (
-                  encounters.map((encounter) => (
-                    <div key={encounter.id} className={styles.visitCard}>
-                      <div className={styles.visitInfo}>
-                        <img
-                          src={avatar}
-                          alt={`Dr. ${encounter.clinician?.first_name}`}
-                          className={styles.visitAvatar}
-                        />
-                        <div className={styles.visitDetails}>
-                          <span className={styles.visitDoctor}>
-                            {encounter.clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{encounter.clinician?.first_name} {encounter.clinician?.last_name}
-                          </span>
-                          <span className={styles.visitDepartment}>Medical Visit</span>
-                          <span className={styles.visitReason}>
-                            Reason: {encounter.chief_complaint || 'General consultation'}
-                          </span>
+                {filteredEncounters.length > 0 ? (
+                  filteredEncounters.map((encounter) => {
+                    // Get chief complaint from SOAP notes subjective field
+                    const chiefComplaint = encounter.patient_notes_soap?.[0]?.subjective?.split('.')[0] || 'General consultation';
+                    // Format doctor name - avoid doubling "Dr." if already in first_name
+                    const doctorName = encounter.users
+                      ? (encounter.users.first_name?.startsWith('Dr.')
+                          ? `${encounter.users.first_name} ${encounter.users.last_name}`
+                          : `Dr. ${encounter.users.first_name} ${encounter.users.last_name}`)
+                      : 'CityCare Medical Staff';
+                    return (
+                      <div key={encounter.id} className={styles.visitCard}>
+                        <div className={styles.visitInfo}>
+                          <img
+                            src={avatar}
+                            alt={doctorName}
+                            className={styles.visitAvatar}
+                          />
+                          <div className={styles.visitDetails}>
+                            <span className={styles.visitDoctor}>{doctorName}</span>
+                            <span className={styles.visitDepartment}>Medical Visit</span>
+                            <span className={styles.visitReason}>
+                              Reason: {chiefComplaint}
+                            </span>
+                          </div>
+                        </div>
+                        <div className={styles.visitActions}>
+                          <button
+                            className={styles.viewDetailsBtn}
+                            onClick={() => setSelectedEncounter(encounter)}
+                          >
+                            View Details
+                          </button>
+                          <span className={styles.visitDate}>{formatDate(encounter.date)}</span>
                         </div>
                       </div>
-                      <div className={styles.visitActions}>
-                        <button className={styles.viewDetailsBtn}>View Details</button>
-                        <span className={styles.visitDate}>{formatDate(encounter.encounter_date)}</span>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <p style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
                     No visit history found
@@ -352,6 +379,66 @@ export const MedicalRecords: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Encounter Details Modal */}
+      {selectedEncounter && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedEncounter(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Visit Details</h2>
+              <button className={styles.modalClose} onClick={() => setSelectedEncounter(null)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.modalSection}>
+                <h3>Visit Information</h3>
+                <p><strong>Date:</strong> {formatDate(selectedEncounter.date)}</p>
+                <p><strong>Status:</strong> {selectedEncounter.status}</p>
+                <p><strong>Doctor:</strong> {selectedEncounter.users
+                  ? (selectedEncounter.users.first_name?.startsWith('Dr.')
+                      ? `${selectedEncounter.users.first_name} ${selectedEncounter.users.last_name}`
+                      : `Dr. ${selectedEncounter.users.first_name} ${selectedEncounter.users.last_name}`)
+                  : 'CityCare Medical Staff'}</p>
+              </div>
+
+              {selectedEncounter.patient_notes_soap && selectedEncounter.patient_notes_soap.length > 0 && (
+                <div className={styles.modalSection}>
+                  <h3>Clinical Notes</h3>
+                  {selectedEncounter.patient_notes_soap.map((soap, index) => (
+                    <div key={soap.id || index} className={styles.soapNote}>
+                      <p><strong>Subjective:</strong> {soap.subjective || 'N/A'}</p>
+                      <p><strong>Objective:</strong> {soap.objective || 'N/A'}</p>
+                      <p><strong>Assessment:</strong> {soap.assessment || 'N/A'}</p>
+                      <p><strong>Plan:</strong> {soap.plan || 'N/A'}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedEncounter.patient_prescriptions && selectedEncounter.patient_prescriptions.length > 0 && (
+                <div className={styles.modalSection}>
+                  <h3>Prescriptions</h3>
+                  {selectedEncounter.patient_prescriptions.map((rx, index) => (
+                    <div key={rx.id || index} className={styles.prescriptionItem}>
+                      <p><strong>{rx.medication_name}</strong> - {rx.dosage}</p>
+                      <p className={styles.rxDetails}>{rx.frequency}{rx.duration ? ` • ${rx.duration}` : ''}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.modalCloseBtn} onClick={() => setSelectedEncounter(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

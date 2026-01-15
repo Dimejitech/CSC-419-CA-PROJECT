@@ -31,26 +31,32 @@ interface PasswordErrors {
   confirmNewPassword?: string;
 }
 
-interface PasswordData {
-  currentPassword: string;
-  newPassword: string;
-  confirmNewPassword: string;
-}
-
-interface PasswordErrors {
-  currentPassword?: string;
-  newPassword?: string;
-  confirmNewPassword?: string;
-}
-
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal');
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  // Simple search that navigates to relevant pages
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      if (query.includes('appointment') || query.includes('schedule')) {
+        navigate('/clinician/appointments');
+      } else if (query.includes('patient')) {
+        navigate('/clinician/patients');
+      } else if (query.includes('lab') || query.includes('test')) {
+        navigate('/clinician/labs');
+      } else if (query.includes('home') || query.includes('dashboard')) {
+        navigate('/clinician/dashboard');
+      }
+      setSearchQuery('');
+    }
   };
 
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -165,6 +171,8 @@ const Profile: React.FC = () => {
           city: profileData.city,
           state: profileData.state,
           zipCode: profileData.zipCode,
+          dateOfBirth: profileData.dateOfBirth || undefined,
+          gender: profileData.gender || undefined,
         });
         setSaveMessage({ type: 'success', text: 'Profile updated successfully!' });
         setIsEditing(false);
@@ -213,7 +221,13 @@ const Profile: React.FC = () => {
               />
             </svg>
           </span>
-          <input className="labs-searchInput" placeholder="Search..." />
+          <input
+            className="labs-searchInput"
+            placeholder="Search appointments, patients, labs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
+          />
         </div>
 
         <div className="labs-topRight">
@@ -303,13 +317,6 @@ const Profile: React.FC = () => {
                 </span>
                 Profile
               </button>
-
-              <button className="labs-navItem" type="button">
-                <span className="labs-navItemIcon">
-                  <img className="labs-navImg" src="/images/help-circle.png" alt="" />
-                </span>
-                Help / Support
-              </button>
             </nav>
 
             <button className="labs-logout" type="button" onClick={() => { logout(); navigate('/clinician/signin'); }}>
@@ -372,21 +379,21 @@ const Profile: React.FC = () => {
               <div className="quick-actions">
                 <h3 className="quick-actions-title">Quick Actions</h3>
                 <div className="quick-actions-buttons">
-                  <button className="quick-action-btn" type="button">
+                  <button className="quick-action-btn" type="button" onClick={() => handleNavigation('/clinician/appointments')}>
                     <div className="action-content">
                       <div className="action-icon-circle records">
-                        <img src="/images/clock-rotate.png" alt="" className="action-icon-img" />
+                        <img src="/images/appointments.png" alt="" className="action-icon-img" />
                       </div>
-                      <span className="action-text">Request Records</span>
+                      <span className="action-text">View Schedule</span>
                     </div>
                     <span className="action-arrow">›</span>
                   </button>
-                  <button className="quick-action-btn" type="button">
+                  <button className="quick-action-btn" type="button" onClick={() => handleNavigation('/clinician/patients')}>
                     <div className="action-content">
                       <div className="action-icon-circle share">
-                        <img src="/images/share-ios.png" alt="" className="action-icon-img" />
+                        <img src="/images/patients.png" alt="" className="action-icon-img" />
                       </div>
-                      <span className="action-text">Share Profile</span>
+                      <span className="action-text">View Patients</span>
                     </div>
                     <span className="action-arrow">›</span>
                   </button>
@@ -451,23 +458,14 @@ const Profile: React.FC = () => {
 
                       <div className="profile-form-group">
                         <label htmlFor="dateOfBirth">Date of Birth</label>
-                        <div className="profile-input-with-icon">
-                          <input
-                            type="text"
-                            id="dateOfBirth"
-                            name="dateOfBirth"
-                            value={profileData.dateOfBirth}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            placeholder="15/02/1985"
-                          />
-                          <svg className="profile-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                          </svg>
-                        </div>
+                        <input
+                          type="date"
+                          id="dateOfBirth"
+                          name="dateOfBirth"
+                          value={profileData.dateOfBirth}
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                        />
                       </div>
 
                       <div className="profile-form-group">

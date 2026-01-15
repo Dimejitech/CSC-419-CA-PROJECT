@@ -100,10 +100,10 @@ export const schedulingAPI = {
   },
   createBooking: async (data: {
     patientId: string;
-    clinicianId: string;
+    clinicianId?: string;
     slotId: string;
-    startTime: string;
-    endTime: string;
+    startTime?: string;
+    endTime?: string;
     reasonForVisit?: string;
   }) => {
     const response = await api.post('/scheduling/bookings', data);
@@ -285,6 +285,10 @@ export const labAPI = {
     const response = await api.post('/lab/orders', data);
     return response.data;
   },
+  createOrderForPatient: async (data: { patientId: string; testNames: string[]; priority?: string; notes?: string }) => {
+    const response = await api.post('/lab/orders/patient', data);
+    return response.data;
+  },
   getOrders: async (filters?: { status?: string; encounterId?: string }) => {
     const response = await api.get('/lab/orders', { params: filters });
     return response.data;
@@ -438,6 +442,10 @@ export const notificationAPI = {
   },
   deleteNotification: async (notificationId: string) => {
     const response = await api.delete(`/notifications/${notificationId}`);
+    return response.data;
+  },
+  requestRecords: async (email?: string) => {
+    const response = await api.post('/notifications/request-records', { email });
     return response.data;
   },
 };

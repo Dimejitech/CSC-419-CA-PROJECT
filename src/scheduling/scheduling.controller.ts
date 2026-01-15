@@ -21,6 +21,7 @@ import { SlotAvailabilityService } from './services/slot-availability.service';
 import { WalkInManagerService } from './services/walkin-manager.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
+import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 import { CreateSlotDto, UpdateSlotDto, BlockSlotDto } from './dto/create-slot.dto';
 import { CreateWalkInDto } from './dto/create-walkin.dto';
 import { ScheduleQueryDto, AvailableSlotQueryDto } from './dto/schedule-query.dto';
@@ -54,10 +55,10 @@ export class SchedulingController {
 
   /**
    * Create a new appointment booking
-   * Accessible by: Patient, Staff, Admin
+   * Accessible by: Patient, Clinician, Staff, Admin
    */
   @Post('bookings')
-  @Roles('Patient', 'Staff', 'Admin')
+  @Roles('Patient', 'Clinician', 'Staff', 'Admin')
   async createBooking(@Body() dto: CreateBookingDto) {
     return this.bookingService.createBooking(dto);
   }
@@ -114,16 +115,16 @@ export class SchedulingController {
 
   /**
    * Reschedule a booking to a new slot
-   * Accessible by: Patient (own), Staff, Admin
+   * Accessible by: Patient (own), Clinician, Staff, Admin
    */
   @Post('bookings/:bookingId/reschedule')
-  @Roles('Patient', 'Staff', 'Admin')
+  @Roles('Patient', 'Clinician', 'Staff', 'Admin')
   @HttpCode(HttpStatus.OK)
   async rescheduleBooking(
     @Param('bookingId', ParseUUIDPipe) bookingId: string,
-    @Body('newSlotId', ParseUUIDPipe) newSlotId: string,
+    @Body() dto: RescheduleBookingDto,
   ) {
-    return this.bookingService.rescheduleBooking(bookingId, newSlotId);
+    return this.bookingService.rescheduleBooking(bookingId, dto.newSlotId, dto.reason);
   }
 
   // ==================== CLINICIAN ENDPOINTS ====================

@@ -148,9 +148,7 @@ export const BookAppointment: React.FC = () => {
       try {
         // Use local date string to avoid timezone issues
         const dateStr = formatDateString(selectedDate);
-        console.log(`[BookAppointment] Fetching slots for clinician ${selectedClinician.id} on ${dateStr}`);
         const data = await schedulingAPI.getAvailableSlots(selectedClinician.id, dateStr);
-        console.log('[BookAppointment] Available slots:', data);
 
         // De-duplicate slots by ID and sort by start time
         const slotMap = new Map<string, Slot>();
@@ -220,8 +218,10 @@ export const BookAppointment: React.FC = () => {
     }
   };
 
-  const formatTime = (dateStr: string) => {
+  const formatTime = (dateStr: string | undefined | null) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -230,8 +230,10 @@ export const BookAppointment: React.FC = () => {
     });
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Date not set';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -265,17 +267,12 @@ export const BookAppointment: React.FC = () => {
     try {
       if (isReschedule) {
         // Reschedule existing booking
-        console.log('[BookAppointment] Rescheduling booking:', {
-          bookingId: rescheduleBookingId,
+        await schedulingAPI.rescheduleBooking(rescheduleBookingId, {
           newSlotId: selectedSlot.id,
         });
-        const result = await schedulingAPI.rescheduleBooking(rescheduleBookingId, {
-          newSlotId: selectedSlot.id,
-        });
-        console.log('[BookAppointment] Booking rescheduled successfully:', result);
       } else {
         // Create new booking
-        console.log('[BookAppointment] Creating booking with:', {
+        await schedulingAPI.createBooking({
           patientId: user.id,
           clinicianId: selectedClinician.id,
           slotId: selectedSlot.id,
@@ -283,20 +280,9 @@ export const BookAppointment: React.FC = () => {
           endTime: selectedSlot.endTime,
           reasonForVisit: reasonForVisit || undefined,
         });
-        const result = await schedulingAPI.createBooking({
-          patientId: user.id,
-          clinicianId: selectedClinician.id,
-          slotId: selectedSlot.id,
-          startTime: selectedSlot.startTime,
-          endTime: selectedSlot.endTime,
-          reasonForVisit: reasonForVisit || undefined,
-        });
-        console.log('[BookAppointment] Booking created successfully:', result);
       }
       setBookingSuccess(true);
     } catch (err: any) {
-      console.error('[BookAppointment] Error:', err);
-      console.error('[BookAppointment] Error response:', err?.response?.data);
       setError(err?.response?.data?.message || `Failed to ${isReschedule ? 'reschedule' : 'book'} appointment. Please try again.`);
     } finally {
       setLoading(false);
@@ -357,7 +343,7 @@ export const BookAppointment: React.FC = () => {
             {isReschedule ? 'Appointment Rescheduled!' : 'Appointment Booked!'}
           </h2>
           <p className={styles.successText}>
-            Your appointment with Dr. {selectedClinician?.firstName} {selectedClinician?.lastName} has been {isReschedule ? 'rescheduled' : 'confirmed'}.
+            Your appointment with {selectedClinician?.firstName?.startsWith('Dr.') ? '' : 'Dr. '}{selectedClinician?.firstName} {selectedClinician?.lastName} has been {isReschedule ? 'rescheduled' : 'confirmed'}.
           </p>
           <div className={styles.successDetails}>
             <p><strong>Date:</strong> {selectedSlot && formatDate(selectedSlot.startTime)}</p>
@@ -535,7 +521,7 @@ export const BookAppointment: React.FC = () => {
           <div className={styles.confirmCard}>
             <div className={styles.confirmRow}>
               <span className={styles.confirmLabel}>Doctor</span>
-              <span className={styles.confirmValue}>Dr. {selectedClinician?.firstName} {selectedClinician?.lastName}</span>
+              <span className={styles.confirmValue}>{selectedClinician?.firstName?.startsWith('Dr.') ? '' : 'Dr. '}{selectedClinician?.firstName} {selectedClinician?.lastName}</span>
             </div>
             <div className={styles.confirmRow}>
               <span className={styles.confirmLabel}>Date</span>

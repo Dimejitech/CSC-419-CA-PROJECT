@@ -80,7 +80,7 @@ export class IamService {
     const accessToken = jwt.sign(
       { sub: user.id, role: user.roles?.name },
       process.env.JWT_SECRET!,
-      { expiresIn: '15m' },
+      { expiresIn: '3h' },
     );
 
     const refreshToken = jwt.sign(
@@ -114,7 +114,7 @@ export class IamService {
     const accessToken = jwt.sign(
       { sub: payload.sub },
       process.env.JWT_SECRET!,
-      { expiresIn: '15m' },
+      { expiresIn: '3h' },
     );
 
     return { accessToken };

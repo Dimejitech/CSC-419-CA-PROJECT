@@ -96,6 +96,29 @@ export class NotificationService {
     });
   }
 
+  async notifyClinicianAppointmentCancelled(clinicianId: string, appointmentDetails: { date: string; patientName: string; bookingId: string }) {
+    return this.create({
+      userId: clinicianId,
+      type: 'appointment',
+      title: 'Appointment Cancelled',
+      message: `Appointment with ${appointmentDetails.patientName} on ${appointmentDetails.date} has been cancelled.`,
+      referenceId: appointmentDetails.bookingId,
+      referenceType: 'booking',
+    });
+  }
+
+  async notifyClinicianAppointmentRescheduled(clinicianId: string, appointmentDetails: { newDate: string; patientName: string; bookingId: string; reason?: string }) {
+    const reasonText = appointmentDetails.reason ? ` Reason: ${appointmentDetails.reason}` : '';
+    return this.create({
+      userId: clinicianId,
+      type: 'appointment',
+      title: 'Appointment Rescheduled',
+      message: `Appointment with ${appointmentDetails.patientName} has been rescheduled to ${appointmentDetails.newDate}.${reasonText}`,
+      referenceId: appointmentDetails.bookingId,
+      referenceType: 'booking',
+    });
+  }
+
   async notifyAppointmentCancelled(userId: string, appointmentDetails: { date: string; doctorName: string; bookingId: string }) {
     return this.create({
       userId,
@@ -107,12 +130,13 @@ export class NotificationService {
     });
   }
 
-  async notifyAppointmentRescheduled(userId: string, appointmentDetails: { newDate: string; doctorName: string; bookingId: string }) {
+  async notifyAppointmentRescheduled(userId: string, appointmentDetails: { newDate: string; doctorName: string; bookingId: string; reason?: string }) {
+    const reasonText = appointmentDetails.reason ? ` Reason: ${appointmentDetails.reason}` : '';
     return this.create({
       userId,
       type: 'appointment',
       title: 'Appointment Rescheduled',
-      message: `Your appointment with ${appointmentDetails.doctorName} has been rescheduled to ${appointmentDetails.newDate}.`,
+      message: `Your appointment with ${appointmentDetails.doctorName} has been rescheduled to ${appointmentDetails.newDate}.${reasonText}`,
       referenceId: appointmentDetails.bookingId,
       referenceType: 'booking',
     });

@@ -47,6 +47,26 @@ export class LabController {
   }
 
   /**
+   * POST /lab/orders/patient
+   * Create a new lab order for a patient (creates encounter if needed)
+   * Roles: Clinician
+   */
+  @Post('orders/patient')
+  @Roles('Clinician')
+  createOrderForPatient(
+    @Body() body: { patientId: string; testNames: string[]; priority?: string; notes?: string },
+    @CurrentUser() user: any,
+  ) {
+    return this.labOrderService.createOrderForPatient({
+      patientId: body.patientId,
+      clinicianId: user.id,
+      testNames: body.testNames,
+      priority: body.priority,
+      notes: body.notes,
+    });
+  }
+
+  /**
    * GET /lab/orders
    * Get all lab orders with optional filters
    * Roles: Clinician, Lab Technician
@@ -167,6 +187,18 @@ export class LabController {
   }
 
   /**
+   * GET /lab/results/unverified
+   * Get all unverified results (for clinician review queue)
+   * IMPORTANT: This route MUST be defined BEFORE /lab/results/:id
+   * Roles: Clinician
+   */
+  @Get('results/unverified')
+  @Roles('Clinician')
+  getUnverifiedResults(@CurrentUser() user: any) {
+    return this.resultVerificationService.getUnverifiedResults(user.id);
+  }
+
+  /**
    * GET /lab/results/:id
    * Get a specific lab result by ID
    * Roles: Clinician, Lab Technician
@@ -220,17 +252,6 @@ export class LabController {
     @CurrentUser() user: any,
   ) {
     return this.resultVerificationService.verifyResult(id, user.id);
-  }
-
-  /**
-   * GET /lab/results/unverified
-   * Get all unverified results (for clinician review queue)
-   * Roles: Clinician
-   */
-  @Get('results/unverified')
-  @Roles('Clinician')
-  getUnverifiedResults(@CurrentUser() user: any) {
-    return this.resultVerificationService.getUnverifiedResults(user.id);
   }
 
   /**

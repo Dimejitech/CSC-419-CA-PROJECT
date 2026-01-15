@@ -386,3 +386,154 @@
     width: 100%;
   }
 }
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalHeader h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.modalClose:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.modalBody {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modalSection {
+  margin-bottom: 24px;
+}
+
+.modalSection:last-child {
+  margin-bottom: 0;
+}
+
+.modalSection h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #03A5FF;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalSection p {
+  font-size: 14px;
+  color: #374151;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.modalSection p strong {
+  color: #111827;
+}
+
+.soapNote {
+  background-color: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.soapNote p {
+  margin-bottom: 12px;
+}
+
+.soapNote p:last-child {
+  margin-bottom: 0;
+}
+
+.prescriptionItem {
+  background-color: #f0fdf4;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 8px;
+  border-left: 3px solid #22c55e;
+}
+
+.prescriptionItem p {
+  margin: 0;
+}
+
+.rxDetails {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.modalCloseBtn {
+  padding: 10px 24px;
+  background: #03A5FF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modalCloseBtn:hover {
+  background: #0284c7;
+}

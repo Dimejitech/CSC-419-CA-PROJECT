@@ -110,6 +110,16 @@ const EmptyBellIcon = () => (
   </svg>
 );
 
+// Search result type
+interface SearchResult {
+  id: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  path: string;
+  icon: 'appointment' | 'patient' | 'lab' | 'notification';
+}
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -117,28 +127,53 @@ const Dashboard: React.FC = () => {
   const [activeNavItem, setActiveNavItem] = useState('Home');
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [appointments, setAppointments] = useState<Booking[]>([]);
+  const [recentVisits, setRecentVisits] = useState<Array<{ id: string; patientId: string; patientName: string; status: string; lastVisit: string }>>([]);
   const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
 
     setLoading(true);
     try {
-      // Fetch clinician's schedule for next 7 days
+      // Fetch clinician's schedule for next 7 days (upcoming)
       const startDate = new Date().toISOString();
       const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const [scheduleData, labData, notificationsData] = await Promise.all([
+      // Fetch past appointments for recent visits (last 30 days)
+      const pastStartDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const pastEndDate = new Date().toISOString();
+
+      const [scheduleData, pastScheduleData, labData, notificationsData] = await Promise.all([
         schedulingAPI.getClinicianSchedule(user.id, startDate, endDate).catch(() => []),
+        schedulingAPI.getClinicianSchedule(user.id, pastStartDate, pastEndDate).catch(() => []),
         labAPI.getUnverifiedResults().catch(() => []),
         notificationAPI.getNotifications(10).catch(() => ({ notifications: [], unreadCount: 0 })),
       ]);
 
-      console.log('[ClinicianDashboard] Fetched schedule:', scheduleData);
       setAppointments(scheduleData || []);
+
+      // Transform past appointments to recent visits format
+      const visits = (pastScheduleData || [])
+        .filter((appt: Booking) => appt.patient && appt.status !== 'Cancelled')
+        .slice(0, 10)
+        .map((appt: Booking) => ({
+          id: appt.id,
+          patientId: appt.patient?.id || '',
+          patientName: `${appt.patient?.first_name || ''} ${appt.patient?.last_name || ''}`.trim() || 'Unknown Patient',
+          status: appt.status === 'Completed' ? 'Stable' : 'Pending',
+          lastVisit: new Date(appt.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        }));
+      setRecentVisits(visits);
+
       setLabResults(labData || []);
       setNotifications(notificationsData?.notifications || []);
       setUnreadCount(notificationsData?.unreadCount || 0);
@@ -176,8 +211,105 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const formatNotificationTime = (dateStr: string) => {
+  // Global search function
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results: SearchResult[] = [];
+
+    // Search appointments
+    appointments.forEach(appt => {
+      const patientName = `${appt.patient?.first_name || ''} ${appt.patient?.last_name || ''}`.toLowerCase();
+      const reason = (appt.reasonForVisit || '').toLowerCase();
+      if (patientName.includes(lowerQuery) || reason.includes(lowerQuery)) {
+        // Format date safely
+        let formattedDate = 'Scheduled';
+        if (appt.startTime) {
+          const date = new Date(appt.startTime);
+          if (!isNaN(date.getTime())) {
+            formattedDate = date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+          }
+        }
+        results.push({
+          id: appt.id,
+          title: `${appt.patient?.first_name || ''} ${appt.patient?.last_name || ''}`.trim() || 'Patient',
+          subtitle: formattedDate,
+          category: 'Dashboard > Upcoming Appointments',
+          path: '/clinician/appointments',
+          icon: 'appointment',
+        });
+      }
+    });
+
+    // Search recent visits
+    recentVisits.forEach(visit => {
+      if (visit.patientName.toLowerCase().includes(lowerQuery)) {
+        results.push({
+          id: visit.id,
+          title: visit.patientName,
+          subtitle: `Last visit: ${visit.lastVisit}`,
+          category: 'Dashboard > Recent Patient Visits',
+          path: `/clinician/patients?id=${visit.patientId}`,
+          icon: 'patient',
+        });
+      }
+    });
+
+    // Search lab results
+    labResults.forEach(lab => {
+      const testName = (lab.testName || lab.testItem?.testName || '').toLowerCase();
+      const patientName = lab.testItem?.labOrder?.encounter?.chart?.patient
+        ? `${lab.testItem.labOrder.encounter.chart.patient.first_name} ${lab.testItem.labOrder.encounter.chart.patient.last_name}`.toLowerCase()
+        : '';
+      if (testName.includes(lowerQuery) || patientName.includes(lowerQuery)) {
+        results.push({
+          id: lab.id,
+          title: lab.testName || lab.testItem?.testName || 'Lab Test',
+          subtitle: patientName || 'Unknown Patient',
+          category: 'Dashboard > Lab Results',
+          path: '/clinician/labs',
+          icon: 'lab',
+        });
+      }
+    });
+
+    // Search notifications
+    notifications.forEach(notif => {
+      if (notif.title.toLowerCase().includes(lowerQuery) || notif.message.toLowerCase().includes(lowerQuery)) {
+        results.push({
+          id: notif.id,
+          title: notif.title,
+          subtitle: notif.message.slice(0, 50) + (notif.message.length > 50 ? '...' : ''),
+          category: 'Dashboard > Notifications',
+          path: '#',
+          icon: 'notification',
+        });
+      }
+    });
+
+    setSearchResults(results.slice(0, 10)); // Limit to 10 results
+    setShowSearchResults(true);
+  };
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    setShowSearchResults(false);
+    setSearchQuery('');
+    if (result.path !== '#') {
+      navigate(result.path);
+    }
+  };
+
+  const formatNotificationTime = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Recently';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Recently';
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -191,8 +323,10 @@ const Dashboard: React.FC = () => {
     return date.toLocaleDateString();
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Date not set';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -202,8 +336,10 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  const formatTime = (dateStr: string) => {
+  const formatTime = (dateStr: string | undefined | null) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -215,12 +351,6 @@ const Dashboard: React.FC = () => {
   const upcomingAppointment = appointments.find(a =>
     a.patient && new Date(a.startTime) > new Date() && a.status !== 'Cancelled'
   );
-
-  // Sample payment data (can be replaced with real API data)
-  const payments = [
-    { id: '1', patientName: 'Anna Lee', status: 'Stable', lastVisit: 'Jan 12, 2024' },
-    { id: '2', patientName: 'Anna Lee', status: 'Stable', lastVisit: 'Jan 12, 2024' },
-  ];
 
   const handleNavigation = (item: string) => {
     setActiveNavItem(item);
@@ -255,7 +385,48 @@ const Dashboard: React.FC = () => {
               />
             </svg>
           </span>
-          <input className="dashboard-searchInput" placeholder="Search..." />
+          <input
+            className="dashboard-searchInput"
+            placeholder="Search patients, appointments, labs..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => searchQuery && setShowSearchResults(true)}
+            onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
+          />
+          {showSearchResults && (
+            <div className="dashboard-searchResults">
+              {searchResults.length > 0 ? (
+                searchResults.map((result) => (
+                  <div
+                    key={result.id}
+                    className="dashboard-searchResultItem"
+                    onClick={() => handleSearchResultClick(result)}
+                  >
+                    <div className={`dashboard-searchResultIcon dashboard-searchResultIcon--${result.icon}`}>
+                      {result.icon === 'appointment' && <ScheduleIcon />}
+                      {result.icon === 'patient' && <PatientsIcon />}
+                      {result.icon === 'lab' && <LabOrderIcon />}
+                      {result.icon === 'notification' && (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div className="dashboard-searchResultContent">
+                      <div className="dashboard-searchResultTitle">{result.title}</div>
+                      <div className="dashboard-searchResultSubtitle">{result.subtitle}</div>
+                      <div className="dashboard-searchResultCategory">{result.category}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="dashboard-searchNoResults">
+                  <span>No results found for "{searchQuery}"</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="dashboard-topRight">
@@ -288,12 +459,7 @@ const Dashboard: React.FC = () => {
           <div className="dashboard-sidebarBox">
             <div className="dashboard-navHeader">
               <div className="dashboard-navHeaderPanel">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7"/>
-                  <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
-                </svg>
+                <img className="dashboard-navHeaderCollapse" src="/images/sidebar-collapse.png" alt="" />
                 <span className="dashboard-navHeaderTitle">Navigation</span>
               </div>
             </div>
@@ -359,22 +525,11 @@ const Dashboard: React.FC = () => {
                 </span>
                 Profile
               </button>
-
-              <button className="dashboard-navItem" type="button">
-                <span className="dashboard-navItemIcon">
-                  <img className="dashboard-navImg" src="/images/help-circle.png" alt="" />
-                </span>
-                Help / Support
-              </button>
             </nav>
 
             <button className="dashboard-logout" type="button" onClick={() => { logout(); navigate('/clinician/signin'); }}>
               <span className="dashboard-logoutIcon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
+                <img className="dashboard-logoutImg" src="/images/log-out.png" alt="" />
               </span>
               Logout
             </button>
@@ -412,10 +567,12 @@ const Dashboard: React.FC = () => {
                             <span className="appointment-time">{formatTime(upcomingAppointment.startTime)}</span>
                           </div>
                           <div className="appointment-patient">
-                            {upcomingAppointment.patient?.first_name} {upcomingAppointment.patient?.last_name}
+                            {upcomingAppointment.patient
+                              ? `${upcomingAppointment.patient.first_name || ''} ${upcomingAppointment.patient.last_name || ''}`.trim() || 'Patient'
+                              : 'Patient'}
                           </div>
                           <div className="appointment-department">
-                            {upcomingAppointment.reasonForVisit || 'Cardiology Department'}
+                            {upcomingAppointment.reasonForVisit || 'General Consultation'}
                           </div>
                         </div>
                       </div>
@@ -461,48 +618,50 @@ const Dashboard: React.FC = () => {
                   </div>
                 </section>
 
-                {/* Payment History */}
+                {/* Recent Patient Visits */}
                 <section className="dashboard-card payment-history">
-                  <h2 className="card-title-plain">Payment History</h2>
+                  <h2 className="card-title-plain">Recent Patient Visits</h2>
 
-                  {!showAllPayments ? (
-                    <>
-                      <table className="payment-table">
-                        <thead>
-                          <tr>
-                            <th>Patient Name</th>
-                            <th>Status</th>
-                            <th>Last Visit</th>
-                            <th>Action</th>
+                  <table className="payment-table">
+                    <thead>
+                      <tr>
+                        <th>Patient Name</th>
+                        <th>Status</th>
+                        <th>Last Visit</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentVisits.length > 0 ? (
+                        recentVisits.slice(0, showAllPayments ? 10 : 3).map((visit) => (
+                          <tr key={visit.id}>
+                            <td>{visit.patientName}</td>
+                            <td>
+                              <span className={`status-badge status-${visit.status.toLowerCase()}`}>
+                                {visit.status}
+                              </span>
+                            </td>
+                            <td>{visit.lastVisit}</td>
+                            <td>
+                              <a href="#" className="action-link" onClick={(e) => { e.preventDefault(); navigate(`/clinician/patients?id=${visit.patientId}`); }}>
+                                View Details
+                              </a>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {payments.map((payment) => (
-                            <tr key={payment.id}>
-                              <td>{payment.patientName}</td>
-                              <td>
-                                <span className="status-badge status-stable">
-                                  {payment.status}
-                                </span>
-                              </td>
-                              <td>{payment.lastVisit}</td>
-                              <td>
-                                <a href="#" className="action-link" onClick={(e) => { e.preventDefault(); navigate('/clinician/patients'); }}>
-                                  Review Report
-                                </a>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: 'center', color: '#6b7280', padding: '20px' }}>
+                            No recent patient visits
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
 
-                      <button className="view-all-link" onClick={() => setShowAllPayments(true)}>
-                        View All Payments &gt;&gt;
-                      </button>
-                    </>
-                  ) : (
-                    <button className="view-all-link" onClick={() => setShowAllPayments(false)}>
-                      ← Back
+                  {recentVisits.length > 3 && (
+                    <button className="view-all-link" onClick={() => setShowAllPayments(!showAllPayments)}>
+                      {showAllPayments ? '← Show Less' : 'View All Visits >>'}
                     </button>
                   )}
                 </section>
@@ -534,7 +693,11 @@ const Dashboard: React.FC = () => {
                         <div
                           key={notification.id}
                           className={`notification-item ${!notification.is_read ? 'unread' : ''}`}
-                          onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                          onClick={() => {
+                            setSelectedNotification(notification);
+                            if (!notification.is_read) handleMarkAsRead(notification.id);
+                          }}
+                          style={{ cursor: 'pointer' }}
                         >
                           <div className="notification-content">
                             <p className="notification-title">{notification.title}</p>
@@ -557,11 +720,11 @@ const Dashboard: React.FC = () => {
                   {labResults.length > 0 ? (
                     labResults.slice(0, 2).map((result, index) => (
                       <div key={result.id || index} className="lab-result-item">
-                        <h3 className="lab-result-name">{result.testItem?.testName || result.testName || 'Lab Test'}</h3>
+                        <h3 className="lab-result-name">{result.testName || result.test_type || 'Lab Test'}</h3>
                         <p className="lab-result-patient">
-                          Patient: {result.testItem?.labOrder?.encounter?.chart?.patient?.first_name || 'Unknown'} {result.testItem?.labOrder?.encounter?.chart?.patient?.last_name || ''}
+                          Patient: {result.patient?.first_name || 'Unknown'} {result.patient?.last_name || ''}
                         </p>
-                        <p className="lab-result-id">ID: {result.id?.slice(0, 5) || '22022'}</p>
+                        <p className="lab-result-id">ID: {result.id?.slice(0, 5) || 'N/A'}</p>
                         <div className="progress-bar">
                           <div className="progress-fill" style={{ width: '70%', backgroundColor: index === 0 ? '#03A5FF' : '#F59E0B' }} />
                         </div>
@@ -571,31 +734,12 @@ const Dashboard: React.FC = () => {
                       </div>
                     ))
                   ) : (
-                    <>
-                      <div className="lab-result-item">
-                        <h3 className="lab-result-name">Cholesterol Test</h3>
-                        <p className="lab-result-patient">Patient: John Doe</p>
-                        <p className="lab-result-id">ID: 22022</p>
-                        <div className="progress-bar">
-                          <div className="progress-fill" style={{ width: '85%', backgroundColor: '#03A5FF' }} />
-                        </div>
-                        <a href="#" className="review-link" onClick={(e) => { e.preventDefault(); navigate('/clinician/labs'); }}>
-                          Review Report
-                        </a>
-                      </div>
-
-                      <div className="lab-result-item">
-                        <h3 className="lab-result-name">Lipid Test</h3>
-                        <p className="lab-result-patient">Patient: Jack White</p>
-                        <p className="lab-result-id">ID: 22031</p>
-                        <div className="progress-bar">
-                          <div className="progress-fill" style={{ width: '45%', backgroundColor: '#F59E0B' }} />
-                        </div>
-                        <a href="#" className="review-link" onClick={(e) => { e.preventDefault(); navigate('/clinician/labs'); }}>
-                          Review Report
-                        </a>
-                      </div>
-                    </>
+                    <div className="empty-state" style={{ padding: '30px', textAlign: 'center' }}>
+                      <p className="empty-text">No recent lab results to review</p>
+                      <button className="btn-outline" style={{ marginTop: '12px' }} onClick={() => navigate('/clinician/labs')}>
+                        View All Labs
+                      </button>
+                    </div>
                   )}
                 </section>
               </div>
@@ -603,6 +747,46 @@ const Dashboard: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Notification Detail Modal */}
+      {selectedNotification && (
+        <div className="notification-modal-overlay" onClick={() => setSelectedNotification(null)}>
+          <div className="notification-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="notification-modal-header">
+              <div className="notification-modal-header-left">
+                <div className="notification-modal-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                </div>
+                <h3 className="notification-modal-title">{selectedNotification.title}</h3>
+              </div>
+              <button className="notification-modal-close" onClick={() => setSelectedNotification(null)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="notification-modal-body">
+              <p className="notification-modal-message">{selectedNotification.message}</p>
+              <div className="notification-modal-time">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12,6 12,12 16,14" />
+                </svg>
+                {formatNotificationTime(selectedNotification.created_at)}
+              </div>
+            </div>
+            <div className="notification-modal-footer">
+              <button className="notification-modal-btn" onClick={() => setSelectedNotification(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

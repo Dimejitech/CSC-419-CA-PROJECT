@@ -68,7 +68,6 @@ export const Appointments: React.FC = () => {
     setLoading(true);
     try {
       const data = await schedulingAPI.getPatientBookings(user.id);
-      console.log('[Appointments] Fetched bookings:', data);
       setBookings(data || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -107,9 +106,10 @@ export const Appointments: React.FC = () => {
     });
   };
 
-  const formatDate = (dateStr: string) => {
-    // Parse as UTC to avoid timezone issues
+  const formatDate = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Date not set';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -119,8 +119,10 @@ export const Appointments: React.FC = () => {
     });
   };
 
-  const formatTime = (dateStr: string) => {
+  const formatTime = (dateStr: string | undefined | null) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -178,7 +180,9 @@ export const Appointments: React.FC = () => {
                 />
                 <div className={styles.doctorDetails}>
                   <span className={styles.doctorName}>
-                    {upcomingAppointment.clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{upcomingAppointment.clinician?.first_name} {upcomingAppointment.clinician?.last_name}
+                    {upcomingAppointment.clinician
+                      ? `${upcomingAppointment.clinician.first_name?.startsWith('Dr.') ? '' : 'Dr. '}${upcomingAppointment.clinician.first_name || ''} ${upcomingAppointment.clinician.last_name || ''}`.trim()
+                      : 'Your Doctor'}
                   </span>
                   <div className={styles.departmentRow}>
                     <span className={styles.statusDot}></span>
@@ -246,7 +250,9 @@ export const Appointments: React.FC = () => {
                     <span className={styles.pastDate}>{formatDate(appointment.slot?.startTime || appointment.startTime || '')}</span>
                     <span className={styles.pastTime}>{formatTime(appointment.slot?.startTime || appointment.startTime || '')}</span>
                     <span className={styles.pastDoctor}>
-                      {appointment.clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{appointment.clinician?.first_name} {appointment.clinician?.last_name}
+                      {appointment.clinician
+                        ? `${appointment.clinician.first_name?.startsWith('Dr.') ? '' : 'Dr. '}${appointment.clinician.first_name || ''} ${appointment.clinician.last_name || ''}`.trim()
+                        : 'Your Doctor'}
                     </span>
                     <span className={styles.pastDepartment}>
                       {appointment.reasonForVisit || 'General Consultation'}

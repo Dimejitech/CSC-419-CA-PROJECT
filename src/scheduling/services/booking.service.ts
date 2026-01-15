@@ -442,13 +442,26 @@ export class BookingService {
       throw new ConflictException('Cannot cancel a completed booking');
     }
 
-    // Get slot and clinician info for notification
+    // Get slot, clinician, and patient info for notifications
     let appointmentDate = 'your scheduled time';
     let doctorName = 'your doctor';
+    let clinicianId: string | null = null;
+    let patientName = 'Patient';
+
+    // Get patient info
+    if (booking.patient_id) {
+      const patient = await this.prisma.users.findUnique({
+        where: { id: booking.patient_id },
+        select: { first_name: true, last_name: true },
+      });
+      if (patient) {
+        patientName = `${patient.first_name} ${patient.last_name}`;
+      }
+    }
 
     if (booking.slot_id) {
-      const slotInfo = await this.prisma.$queryRaw<Array<{ start_time: Date; first_name: string; last_name: string }>>`
-        SELECT lower(s.time_range) as start_time, u.first_name, u.last_name
+      const slotInfo = await this.prisma.$queryRaw<Array<{ start_time: Date; first_name: string; last_name: string; clinician_id: string }>>`
+        SELECT lower(s.time_range) as start_time, u.first_name, u.last_name, s.clinician_id
         FROM appt_slots s
         JOIN users u ON s.clinician_id = u.id
         WHERE s.id = ${booking.slot_id}::uuid
@@ -463,6 +476,7 @@ export class BookingService {
         // Avoid duplicate "Dr." prefix if first_name already contains it
         const doctorPrefix = slotInfo[0].first_name?.startsWith('Dr.') ? '' : 'Dr. ';
         doctorName = `${doctorPrefix}${slotInfo[0].first_name} ${slotInfo[0].last_name}`;
+        clinicianId = slotInfo[0].clinician_id;
       }
     }
 
@@ -489,13 +503,22 @@ export class BookingService {
       };
     });
 
-    // Send cancellation notification
+    // Send cancellation notification to patient
     if (booking.patient_id) {
       this.notificationService.notifyAppointmentCancelled(booking.patient_id, {
         date: appointmentDate,
         doctorName,
         bookingId,
-      }).catch(err => console.error('Failed to send cancellation notification:', err));
+      }).catch(err => console.error('Failed to send patient cancellation notification:', err));
+    }
+
+    // Send cancellation notification to clinician
+    if (clinicianId) {
+      this.notificationService.notifyClinicianAppointmentCancelled(clinicianId, {
+        date: appointmentDate,
+        patientName,
+        bookingId,
+      }).catch(err => console.error('Failed to send clinician cancellation notification:', err));
     }
 
     return result;
@@ -503,14 +526,15 @@ export class BookingService {
 
   /**
    * Reschedule a booking to a new time slot
-   * 
+   *
    * @param bookingId - Current booking UUID
    * @param newSlotId - New slot UUID
+   * @param reason - Optional reason for rescheduling
    * @returns Updated booking with new slot
    * @throws NotFoundException if booking or new slot not found
    * @throws ConflictException if new slot not available
    */
-  async rescheduleBooking(bookingId: string, newSlotId: string) {
+  async rescheduleBooking(bookingId: string, newSlotId: string, reason?: string) {
     const booking = await this.prisma.appt_bookings.findUnique({
       where: { id: bookingId },
     });
@@ -547,6 +571,18 @@ export class BookingService {
 
     if (newSlot.status !== 'Available') {
       throw new ConflictException(`New slot is ${newSlot.status} and cannot be booked`);
+    }
+
+    // Get patient info for clinician notification
+    let patientName = 'Patient';
+    if (booking.patient_id) {
+      const patient = await this.prisma.users.findUnique({
+        where: { id: booking.patient_id },
+        select: { first_name: true, last_name: true },
+      });
+      if (patient) {
+        patientName = `${patient.first_name} ${patient.last_name}`;
+      }
     }
 
     // Get new slot time for notification
@@ -613,7 +649,7 @@ export class BookingService {
       };
     });
 
-    // Send reschedule notification
+    // Send reschedule notification to patient
     if (booking.patient_id) {
       // Avoid duplicate "Dr." prefix if first_name already contains it
       const doctorPrefix = newSlot.users?.first_name?.startsWith('Dr.') ? '' : 'Dr. ';
@@ -622,9 +658,20 @@ export class BookingService {
         newDate: newAppointmentDate,
         doctorName,
         bookingId,
-      }).catch(err => console.error('Failed to send reschedule notification:', err));
+        reason,
+      }).catch(err => console.error('Failed to send patient reschedule notification:', err));
     }
 
-    return result;
+    // Send reschedule notification to clinician
+    if (newSlot.users?.id) {
+      this.notificationService.notifyClinicianAppointmentRescheduled(newSlot.users.id, {
+        newDate: newAppointmentDate,
+        patientName,
+        bookingId,
+        reason,
+      }).catch(err => console.error('Failed to send clinician reschedule notification:', err));
+    }
+
+    return { ...result, reason };
   }
 }

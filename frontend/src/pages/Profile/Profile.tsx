@@ -48,6 +48,24 @@ export const Profile: React.FC = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isRequestingRecords, setIsRequestingRecords] = useState(false);
+
+  // Handle requesting medical records (demo mode - always shows success)
+  const handleRequestRecords = async () => {
+    setIsRequestingRecords(true);
+
+    // Simulate API delay for realistic demo experience
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // For demo purposes, always show success
+    const email = formData.email || user?.email || 'your registered email';
+    setSaveMessage({
+      type: 'success',
+      text: `Medical records request submitted successfully! A copy will be sent to ${email} within 2-3 business days.`
+    });
+
+    setIsRequestingRecords(false);
+  };
 
   // Populate form when user data loads
   useEffect(() => {
@@ -59,11 +77,11 @@ export const Profile: React.FC = () => {
       try {
         const chart = await clinicalAPI.getPatientChart(user.id);
         if (chart?.dob) {
-          dob = new Date(chart.dob).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-          });
+          const dobDate = new Date(chart.dob);
+          if (!isNaN(dobDate.getTime())) {
+            // Format as YYYY-MM-DD for date input
+            dob = dobDate.toISOString().split('T')[0];
+          }
         }
       } catch (e) {
         // Chart may not exist
@@ -93,7 +111,6 @@ export const Profile: React.FC = () => {
         state: user.state || '',
         zipCode: user.zip_code || '',
       });
-      console.log('[Profile] Loaded user data:', { address: user.address, city: user.city, state: user.state, zip_code: user.zip_code });
     };
 
     loadProfileData();
@@ -118,6 +135,7 @@ export const Profile: React.FC = () => {
     setIsSaving(true);
     setSaveMessage(null);
     try {
+      // Update user profile
       await userAPI.updateProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -127,6 +145,14 @@ export const Profile: React.FC = () => {
         state: formData.state,
         zipCode: formData.zipCode,
       });
+
+      // Update DOB in patient chart if provided (backend will create chart if needed)
+      if (formData.dateOfBirth && user?.id) {
+        await clinicalAPI.updatePatientChart(user.id, {
+          dob: formData.dateOfBirth,
+        });
+      }
+
       setSaveMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error: any) {
       setSaveMessage({ type: 'error', text: error.response?.data?.message || 'Failed to update profile' });
@@ -226,11 +252,6 @@ export const Profile: React.FC = () => {
                 alt="Profile"
                 className={styles.avatar}
               />
-              <button className={styles.editAvatarBtn}>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8.5 1.5C8.63132 1.36868 8.78722 1.26454 8.95893 1.19347C9.13064 1.12239 9.31465 1.08582 9.50044 1.08582C9.68623 1.08582 9.87024 1.12239 10.042 1.19347C10.2137 1.26454 10.3696 1.36868 10.5009 1.5C10.6322 1.63132 10.7363 1.78722 10.8074 1.95893C10.8785 2.13064 10.915 2.31465 10.915 2.50044C10.915 2.68623 10.8785 2.87024 10.8074 3.04195C10.7363 3.21366 10.6322 3.36956 10.5009 3.50088L3.75 10.2518L1 11L1.74824 8.25L8.5 1.5Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
             </div>
             <h3 className={styles.userName}>{formData.firstName} {formData.lastName}</h3>
             <p className={styles.userEmail}>{formData.email}</p>
@@ -243,17 +264,13 @@ export const Profile: React.FC = () => {
             <button
               className={styles.quickActionBtn}
               type="button"
-              onClick={() => {
-                setSaveMessage({
-                  type: 'success',
-                  text: 'Medical records request submitted. You will receive an email with your records within 2-3 business days.'
-                });
-              }}
+              onClick={handleRequestRecords}
+              disabled={isRequestingRecords}
             >
               <div className={`${styles.quickActionIcon} ${styles.records}`}>
                 <img src="/images/clock-rotate.png" alt="" className={styles.quickActionIconImg} />
               </div>
-              <span className={styles.quickActionText}>Request Records</span>
+              <span className={styles.quickActionText}>{isRequestingRecords ? 'Requesting...' : 'Request Records'}</span>
               <span className={styles.quickActionArrow}>›</span>
             </button>
             <button
@@ -315,24 +332,13 @@ export const Profile: React.FC = () => {
                   </div>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>Date of Birth</label>
-                    <div className={styles.inputWithIcon}>
-                      <input
-                        type="text"
-                        name="dateOfBirth"
-                        value={formData.dateOfBirth}
-                        onChange={handleInputChange}
-                        className={styles.formInput}
-                        placeholder="DD/MM/YYYY"
-                      />
-                      <span className={styles.inputIcon}>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="2.5" y="3.33334" width="15" height="15" rx="2" stroke="#9EA2AD" strokeWidth="1.5"/>
-                          <path d="M2.5 7.5H17.5" stroke="#9EA2AD" strokeWidth="1.5" strokeLinecap="round"/>
-                          <path d="M6.66667 2.5V4.16667" stroke="#9EA2AD" strokeWidth="1.5" strokeLinecap="round"/>
-                          <path d="M13.3333 2.5V4.16667" stroke="#9EA2AD" strokeWidth="1.5" strokeLinecap="round"/>
-                        </svg>
-                      </span>
-                    </div>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleInputChange}
+                      className={styles.formInput}
+                    />
                   </div>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>Gender</label>

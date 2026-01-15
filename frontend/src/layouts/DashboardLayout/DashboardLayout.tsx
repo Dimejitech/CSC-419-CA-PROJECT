@@ -1,12 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import styles from './DashboardLayout.module.css';
 import { Header, Sidebar } from '../../components';
 import { useAuth } from '../../context';
+import { schedulingAPI, billingAPI, notificationAPI, labAPI } from '../../services/api';
 
 export const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const [searchData, setSearchData] = useState<{
+    appointments?: any[];
+    labResults?: any[];
+    invoices?: any[];
+    notifications?: any[];
+  }>({});
+
+  // Fetch search data for global search
+  useEffect(() => {
+    const fetchSearchData = async () => {
+      if (!user?.id) return;
+
+      try {
+        const [appointmentsData, labData, invoicesData, notificationsData] = await Promise.all([
+          schedulingAPI.getPatientBookings(user.id).catch(() => []),
+          labAPI.getPatientResults(user.id).catch(() => []),
+          billingAPI.getPatientInvoices(user.id).catch(() => []),
+          notificationAPI.getNotifications(10).catch(() => ({ notifications: [] })),
+        ]);
+
+        setSearchData({
+          appointments: appointmentsData || [],
+          labResults: labData || [],
+          invoices: invoicesData || [],
+          notifications: notificationsData?.notifications || [],
+        });
+      } catch (error) {
+        console.error('Error fetching search data:', error);
+      }
+    };
+
+    fetchSearchData();
+  }, [user?.id]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -21,7 +55,7 @@ export const DashboardLayout: React.FC = () => {
 
   return (
     <div className={styles.layout}>
-      <Header onMenuClick={toggleSidebar} userName={userName} userRole={userRole} />
+      <Header onMenuClick={toggleSidebar} userName={userName} userRole={userRole} searchData={searchData} />
       <div className={styles.main}>
         {/* Mobile overlay */}
         {sidebarOpen && (

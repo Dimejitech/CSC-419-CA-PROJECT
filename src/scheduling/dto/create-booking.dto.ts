@@ -5,13 +5,16 @@ export class CreateBookingDto {
   patientId!: string;
 
   @IsUUID()
-  clinicianId!: string;
+  @IsOptional()
+  clinicianId?: string; // Optional - can be derived from slotId
 
+  @IsOptional()
   @IsString()
-  startTime!: string; // ISO string
+  startTime?: string; // ISO string - optional, derived from slotId
 
+  @IsOptional()
   @IsString()
-  endTime!: string; // ISO string
+  endTime?: string; // ISO string - optional, derived from slotId
 
   @IsOptional()
   @IsString()

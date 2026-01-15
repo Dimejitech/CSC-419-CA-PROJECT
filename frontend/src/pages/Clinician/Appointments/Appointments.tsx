@@ -52,6 +52,9 @@ const Appointments: React.FC = () => {
   const [rescheduleTime, setRescheduleTime] = useState('');
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
   const [showAllPast, setShowAllPast] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchSchedule = useCallback(async () => {
     if (!user?.id) return;
@@ -69,7 +72,6 @@ const Appointments: React.FC = () => {
         endDate.toISOString()
       ).catch(() => []);
 
-      console.log('[ClinicianAppointments] Fetched schedule:', scheduleData);
       setSchedule(scheduleData || []);
     } catch (error) {
       console.error('Error fetching schedule:', error);
@@ -86,10 +88,33 @@ const Appointments: React.FC = () => {
   const handleCancelAppointment = async (bookingId: string) => {
     try {
       await schedulingAPI.cancelBooking(bookingId);
+      setFeedbackMessage({ type: 'success', text: 'Appointment cancelled successfully' });
       fetchSchedule();
     } catch (error) {
       console.error('Error cancelling appointment:', error);
-      alert('Failed to cancel appointment');
+      setFeedbackMessage({ type: 'error', text: 'Failed to cancel appointment' });
+    }
+  };
+
+  const handleAcceptAppointment = async (bookingId: string) => {
+    try {
+      await schedulingAPI.updateBooking(bookingId, { status: 'Confirmed' });
+      setFeedbackMessage({ type: 'success', text: 'Appointment confirmed successfully' });
+      fetchSchedule();
+    } catch (error) {
+      console.error('Error accepting appointment:', error);
+      setFeedbackMessage({ type: 'error', text: 'Failed to accept appointment' });
+    }
+  };
+
+  const handleDeclineAppointment = async (bookingId: string) => {
+    try {
+      await schedulingAPI.cancelBooking(bookingId);
+      setFeedbackMessage({ type: 'success', text: 'Appointment declined' });
+      fetchSchedule();
+    } catch (error) {
+      console.error('Error declining appointment:', error);
+      setFeedbackMessage({ type: 'error', text: 'Failed to decline appointment' });
     }
   };
 
@@ -101,7 +126,7 @@ const Appointments: React.FC = () => {
 
   const handleReschedule = async () => {
     if (!rescheduleModal.appointmentId || !rescheduleDate || !rescheduleTime) {
-      alert('Please select a date and time');
+      setFeedbackMessage({ type: 'error', text: 'Please select a date and time' });
       return;
     }
 
@@ -121,11 +146,11 @@ const Appointments: React.FC = () => {
       await schedulingAPI.rescheduleBooking(rescheduleModal.appointmentId, { newSlotId: newSlot.id });
 
       setRescheduleModal({ open: false, appointmentId: null });
+      setFeedbackMessage({ type: 'success', text: 'Appointment rescheduled successfully' });
       fetchSchedule();
-      alert('Appointment rescheduled successfully');
     } catch (error) {
       console.error('Error rescheduling appointment:', error);
-      alert('Failed to reschedule appointment. Please try again.');
+      setFeedbackMessage({ type: 'error', text: 'Failed to reschedule appointment. Please try again.' });
     } finally {
       setRescheduleLoading(false);
     }
@@ -136,8 +161,10 @@ const Appointments: React.FC = () => {
     navigate(path);
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Date not set';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -147,8 +174,10 @@ const Appointments: React.FC = () => {
     });
   };
 
-  const formatTime = (dateStr: string) => {
+  const formatTime = (dateStr: string | undefined | null) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -159,15 +188,34 @@ const Appointments: React.FC = () => {
 
   const now = new Date();
 
-  // Upcoming appointments (confirmed or pending, future)
+  // Pending requests (need clinician approval)
+  const pendingRequests = schedule.filter(item =>
+    item.patient && item.status === 'Pending' && new Date(item.startTime) >= now
+  );
+
+  // Upcoming appointments (confirmed only, future)
   const upcomingAppointments = schedule.filter(item =>
-    item.patient && (item.status === 'Confirmed' || item.status === 'Pending') && new Date(item.startTime) >= now
+    item.patient && item.status === 'Confirmed' && new Date(item.startTime) >= now
   );
 
   // Past appointments
   const pastAppointments = schedule.filter(item =>
     item.patient && (new Date(item.startTime) < now || item.status === 'Completed')
   );
+
+  // Filter function for search
+  const filterBySearch = (item: ScheduleItem) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const patientName = `${item.patient?.first_name || ''} ${item.patient?.last_name || ''}`.toLowerCase();
+    const reason = (item.reasonForVisit || '').toLowerCase();
+    return patientName.includes(query) || reason.includes(query);
+  };
+
+  // Filtered lists
+  const filteredPendingRequests = pendingRequests.filter(filterBySearch);
+  const filteredUpcomingAppointments = upcomingAppointments.filter(filterBySearch);
+  const filteredPastAppointments = pastAppointments.filter(filterBySearch);
 
   return (
     <div className="appt-page">
@@ -184,7 +232,12 @@ const Appointments: React.FC = () => {
               <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Zm6.2-1.1 4.3 4.3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </span>
-          <input className="appt-searchInput" placeholder="Search..." />
+          <input
+            className="appt-searchInput"
+            placeholder="Search appointments..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         <div className="appt-topRight">
@@ -213,12 +266,7 @@ const Appointments: React.FC = () => {
           <div className="appt-sidebarBox">
             <div className="appt-navHeader">
               <div className="appt-navHeaderPanel">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7"/>
-                  <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
-                </svg>
+                <img className="appt-navHeaderCollapse" src="/images/sidebar-collapse.png" alt="" />
                 <span className="appt-navHeaderTitle">Navigation</span>
               </div>
             </div>
@@ -228,42 +276,28 @@ const Appointments: React.FC = () => {
             <nav className="appt-nav">
               <button className={`appt-navItem ${activeNavItem === 'Home' ? 'appt-navItem--active' : ''}`} onClick={() => handleNavigation('Home', '/clinician/dashboard')} type="button">
                 <span className="appt-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9,22 9,12 15,12 15,22"/>
-                  </svg>
+                  <img className="appt-navImg" src="/images/home.png" alt="" />
                 </span>
                 Home
               </button>
 
               <button className={`appt-navItem ${activeNavItem === 'Appointments' ? 'appt-navItem--active' : ''}`} type="button">
                 <span className="appt-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/>
-                    <path d="M16 2v4M8 2v4M3 10h18"/>
-                  </svg>
+                  <img className="appt-navImg" src="/images/appointments.png" alt="" />
                 </span>
                 Appointments
               </button>
 
               <button className={`appt-navItem ${activeNavItem === 'Patients' ? 'appt-navItem--active' : ''}`} onClick={() => handleNavigation('Patients', '/clinician/patients')} type="button">
                 <span className="appt-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
+                  <img className="appt-navImg" src="/images/patients.png" alt="" />
                 </span>
                 Patients
               </button>
 
               <button className={`appt-navItem ${activeNavItem === 'Labs' ? 'appt-navItem--active' : ''}`} onClick={() => handleNavigation('Labs', '/clinician/labs')} type="button">
                 <span className="appt-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 3h6v6l3 9H6l3-9V3z"/>
-                    <path d="M9 3h6"/>
-                  </svg>
+                  <img className="appt-navImg" src="/images/labs.png" alt="" />
                 </span>
                 Labs
               </button>
@@ -274,33 +308,15 @@ const Appointments: React.FC = () => {
             <nav className="appt-nav">
               <button className={`appt-navItem ${activeNavItem === 'Profile' ? 'appt-navItem--active' : ''}`} onClick={() => handleNavigation('Profile', '/clinician/profile')} type="button">
                 <span className="appt-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="7" r="4"/>
-                    <path d="M5.5 21a8.5 8.5 0 0 1 13 0"/>
-                  </svg>
+                  <img className="appt-navImg" src="/images/profile.png" alt="" />
                 </span>
                 Profile
-              </button>
-
-              <button className="appt-navItem" type="button">
-                <span className="appt-navItemIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                </span>
-                Help / Support
               </button>
             </nav>
 
             <button className="appt-logout" type="button" onClick={() => { logout(); navigate('/clinician/signin'); }}>
               <span className="appt-logoutIcon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
+                <img className="appt-logoutImg" src="/images/log-out.png" alt="" />
               </span>
               Logout
             </button>
@@ -311,10 +327,57 @@ const Appointments: React.FC = () => {
         <main className="appt-content">
           <h1 className="appt-pageTitle">Appointments</h1>
 
+          {/* Feedback Message */}
+          {feedbackMessage && (
+            <div
+              style={{
+                padding: '12px 16px',
+                marginBottom: '16px',
+                borderRadius: '8px',
+                backgroundColor: feedbackMessage.type === 'success' ? '#d1fae5' : '#fee2e2',
+                color: feedbackMessage.type === 'success' ? '#065f46' : '#991b1b',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span>{feedbackMessage.text}</span>
+              <button
+                onClick={() => setFeedbackMessage(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <div className="appt-loading">Loading schedule...</div>
           ) : (
             <>
+              {/* Pending Requests Banner */}
+              {filteredPendingRequests.length > 0 && (
+                <div className="appt-pendingBanner" onClick={() => setShowPendingModal(true)}>
+                  <div className="appt-pendingBannerLeft">
+                    <span className="appt-pendingBannerIcon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                    </span>
+                    <span className="appt-pendingBannerText">
+                      <strong>{filteredPendingRequests.length}</strong> pending appointment {filteredPendingRequests.length === 1 ? 'request' : 'requests'} awaiting your response
+                    </span>
+                  </div>
+                  <button className="appt-pendingBannerBtn" type="button">
+                    Review Requests
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </button>
+                </div>
+              )}
+
               {/* Upcoming Appointments */}
               <section className="appt-section">
                 <div className="appt-sectionHeader">
@@ -322,8 +385,8 @@ const Appointments: React.FC = () => {
                   <button className="appt-bookBtn" type="button" onClick={() => navigate('/clinician/patients')}>Book Appointment</button>
                 </div>
 
-                {upcomingAppointments.length > 0 ? (
-                  upcomingAppointments.slice(0, 1).map((appointment) => (
+                {filteredUpcomingAppointments.length > 0 ? (
+                  filteredUpcomingAppointments.slice(0, 1).map((appointment) => (
                     <div key={appointment.id} className="appt-upcomingCard">
                       <div className="appt-upcomingHeader">
                         <CalendarIcon />
@@ -333,10 +396,10 @@ const Appointments: React.FC = () => {
                       </div>
 
                       <div className="appt-upcomingDetails">
-                        <img src="/images/avatar.png" alt={`${appointment.patient?.first_name}`} className="appt-upcomingAvatar" />
+                        <img src="/images/avatar.png" alt={`${appointment.patient?.first_name || ''} ${appointment.patient?.last_name || ''}`.trim() || 'Patient'} className="appt-upcomingAvatar" />
                         <div className="appt-upcomingInfo">
-                          <h3 className="appt-upcomingName">{appointment.patient?.first_name} {appointment.patient?.last_name}</h3>
-                          <p className="appt-upcomingType">{appointment.reasonForVisit || 'Physiotherapy Checkup'}</p>
+                          <h3 className="appt-upcomingName">{`${appointment.patient?.first_name || ''} ${appointment.patient?.last_name || ''}`.trim() || 'Unknown Patient'}</h3>
+                          <p className="appt-upcomingType">{appointment.reasonForVisit || 'General Consultation'}</p>
                         </div>
                         <span className="appt-statusBadge appt-statusCompleted">
                           {appointment.status === 'Confirmed' ? 'Confirmed' : appointment.status}
@@ -359,28 +422,28 @@ const Appointments: React.FC = () => {
               <section className="appt-section">
                 <div className="appt-sectionHeader">
                   <h2 className="appt-sectionTitleGradient">Past Appointments</h2>
-                  {pastAppointments.length > 4 && (
+                  {filteredPastAppointments.length > 4 && (
                     <button className="appt-viewMoreBtn" type="button" onClick={() => setShowAllPast(!showAllPast)}>
                       {showAllPast ? 'Show Less' : 'View More'}
                     </button>
                   )}
                 </div>
 
-                {pastAppointments.length > 0 ? (
+                {filteredPastAppointments.length > 0 ? (
                   <div className="appt-pastGrid">
-                    {pastAppointments.slice(0, showAllPast ? undefined : 4).map((appointment) => (
+                    {filteredPastAppointments.slice(0, showAllPast ? undefined : 4).map((appointment) => (
                       <div key={appointment.id} className="appt-pastCard">
                         <div className="appt-pastHeader">
-                          <img src="/images/avatar.png" alt={`${appointment.patient?.first_name}`} className="appt-pastAvatar" />
+                          <img src="/images/avatar.png" alt={`${appointment.patient?.first_name || ''} ${appointment.patient?.last_name || ''}`.trim() || 'Patient'} className="appt-pastAvatar" />
                           <div className="appt-pastInfo">
                             <div className="appt-pastTopRow">
                               <span className="appt-pastDate">{formatDate(appointment.startTime)}</span>
                               <span className="appt-statusBadgeSmall appt-statusCompleted">Completed</span>
                             </div>
                             <div className="appt-pastTime">{formatTime(appointment.startTime)}</div>
-                            <div className="appt-pastName">{appointment.patient?.first_name} {appointment.patient?.last_name}</div>
+                            <div className="appt-pastName">{`${appointment.patient?.first_name || ''} ${appointment.patient?.last_name || ''}`.trim() || 'Unknown Patient'}</div>
                             <div className="appt-pastBottomRow">
-                              <span className="appt-pastType">{appointment.reasonForVisit || 'General Medicine'}</span>
+                              <span className="appt-pastType">{appointment.reasonForVisit || 'General Consultation'}</span>
                               <button className="appt-btnSummary" type="button" onClick={() => navigate('/clinician/patients')}>View Summary</button>
                             </div>
                           </div>
@@ -438,6 +501,65 @@ const Appointments: React.FC = () => {
               <button className="appt-btnPrimary" onClick={handleReschedule} disabled={rescheduleLoading}>
                 {rescheduleLoading ? 'Rescheduling...' : 'Reschedule'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Requests Modal */}
+      {showPendingModal && (
+        <div className="appt-modal-overlay" onClick={() => setShowPendingModal(false)}>
+          <div className="appt-modal appt-modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="appt-modal-header">
+              <h2>Pending Appointment Requests</h2>
+              <button className="appt-modal-close" onClick={() => setShowPendingModal(false)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="appt-modal-body appt-modal-scroll">
+              {filteredPendingRequests.length > 0 ? (
+                <div className="appt-pendingList">
+                  {filteredPendingRequests.map((request) => (
+                    <div key={request.id} className="appt-pendingItem">
+                      <div className="appt-pendingItemLeft">
+                        <img src="/images/avatar.png" alt={`${request.patient?.first_name || ''} ${request.patient?.last_name || ''}`.trim() || 'Patient'} className="appt-pendingItemAvatar" />
+                        <div className="appt-pendingItemInfo">
+                          <h4 className="appt-pendingItemName">{`${request.patient?.first_name || ''} ${request.patient?.last_name || ''}`.trim() || 'Unknown Patient'}</h4>
+                          <p className="appt-pendingItemDate">
+                            {formatDate(request.startTime)} at {formatTime(request.startTime)}
+                          </p>
+                          <p className="appt-pendingItemReason">{request.reasonForVisit || 'General Consultation'}</p>
+                        </div>
+                      </div>
+                      <div className="appt-pendingItemActions">
+                        <button
+                          className="appt-btnPrimary appt-btnSm"
+                          type="button"
+                          onClick={() => {
+                            handleAcceptAppointment(request.id);
+                          }}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          className="appt-btnOutline appt-btnSm"
+                          type="button"
+                          onClick={() => {
+                            handleDeclineAppointment(request.id);
+                          }}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="appt-emptyText">No pending requests</p>
+              )}
             </div>
           </div>
         </div>

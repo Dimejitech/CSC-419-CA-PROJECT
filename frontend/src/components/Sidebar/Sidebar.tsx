@@ -9,7 +9,6 @@ import {
   LabIcon,
   CreditCardIcon,
   ProfileIcon,
-  HelpIcon,
   LogoutIcon,
   CollapseIcon,
 } from '../Icons';
@@ -47,7 +46,6 @@ const mainNavItems: NavItem[] = [
 
 const secondaryNavItems: NavItem[] = [
   { path: '/profile', label: 'Profile', icon: <ProfileIcon /> },
-  { path: '/help', label: 'Help / Support', icon: <HelpIcon /> },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {

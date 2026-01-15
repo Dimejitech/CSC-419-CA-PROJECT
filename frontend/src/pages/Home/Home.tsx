@@ -108,6 +108,8 @@ export const Home: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [showProfileNudge, setShowProfileNudge] = useState(false);
   const [healthSummary, setHealthSummary] = useState<{
     latestDiagnosis: string;
     medications: string[];
@@ -213,8 +215,10 @@ export const Home: React.FC = () => {
     }
   };
 
-  const formatNotificationTime = (dateStr: string) => {
+  const formatNotificationTime = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Recently';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Recently';
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -233,6 +237,22 @@ export const Home: React.FC = () => {
     fetchData();
   }, [fetchData, location.key]);
 
+  // Check if profile is incomplete (new account nudge)
+  useEffect(() => {
+    if (user) {
+      // Check if key profile fields are missing
+      const isIncomplete = !user.phone_number || !user.address;
+      // Only show nudge if not previously dismissed in this session
+      const dismissed = sessionStorage.getItem('profileNudgeDismissed');
+      setShowProfileNudge(isIncomplete && !dismissed);
+    }
+  }, [user]);
+
+  const dismissProfileNudge = () => {
+    sessionStorage.setItem('profileNudgeDismissed', 'true');
+    setShowProfileNudge(false);
+  };
+
   const handleBookAppointment = () => {
     navigate('/appointments/book');
   };
@@ -245,8 +265,10 @@ export const Home: React.FC = () => {
     .filter(inv => ['Draft', 'Pending', 'Unpaid', 'Overdue'].includes(inv.status))
     .reduce((sum, inv) => sum + parseFloat(inv.total_amount || 0), 0);
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Date not set';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -256,8 +278,10 @@ export const Home: React.FC = () => {
     });
   };
 
-  const formatTime = (dateStr: string) => {
+  const formatTime = (dateStr: string | undefined | null) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -277,6 +301,36 @@ export const Home: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Profile Completion Nudge */}
+      {showProfileNudge && (
+        <div className={styles.profileNudge}>
+          <div className={styles.profileNudgeContent}>
+            <div className={styles.profileNudgeIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4"/>
+                <path d="M12 8h.01"/>
+              </svg>
+            </div>
+            <div className={styles.profileNudgeText}>
+              <strong>Complete your profile</strong>
+              <span>Add your phone number and address to help us serve you better.</span>
+            </div>
+          </div>
+          <div className={styles.profileNudgeActions}>
+            <button className={styles.profileNudgeBtn} onClick={() => navigate('/profile')}>
+              Complete Profile
+            </button>
+            <button className={styles.profileNudgeDismiss} onClick={dismissProfileNudge}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Top Row - Appointment and Notifications */}
       <div className={styles.topRow}>
@@ -298,7 +352,9 @@ export const Home: React.FC = () => {
                     {formatDate(upcomingAppointment.slot?.startTime)} | {formatTime(upcomingAppointment.slot?.startTime)}
                   </p>
                   <p className={styles.appointmentDoctor}>
-                    {upcomingAppointment.clinician?.first_name?.startsWith('Dr.') ? '' : 'Dr. '}{upcomingAppointment.clinician?.first_name} {upcomingAppointment.clinician?.last_name}
+                    {upcomingAppointment.clinician
+                      ? `${upcomingAppointment.clinician.first_name?.startsWith('Dr.') ? '' : 'Dr. '}${upcomingAppointment.clinician.first_name || ''} ${upcomingAppointment.clinician.last_name || ''}`.trim()
+                      : 'Your Doctor'}
                   </p>
                   <p className={styles.appointmentDepartment}>
                     {upcomingAppointment.reasonForVisit || 'General Consultation'}
@@ -352,7 +408,11 @@ export const Home: React.FC = () => {
                 <div
                   key={notification.id}
                   className={`${styles.notificationItem} ${!notification.is_read ? styles.unread : ''}`}
-                  onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                  onClick={() => {
+                    setSelectedNotification(notification);
+                    if (!notification.is_read) handleMarkAsRead(notification.id);
+                  }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <div className={styles.notificationIcon}>
                     {getNotificationIcon(notification.type)}
@@ -470,6 +530,45 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
+      {/* Notification Detail Modal */}
+      {selectedNotification && (
+        <div className={styles.notificationModalOverlay} onClick={() => setSelectedNotification(null)}>
+          <div className={styles.notificationModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.notificationModalHeader}>
+              <div className={styles.notificationModalHeaderLeft}>
+                <div className={styles.notificationModalIcon}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                </div>
+                <h3 className={styles.notificationModalTitle}>{selectedNotification.title}</h3>
+              </div>
+              <button className={styles.notificationModalClose} onClick={() => setSelectedNotification(null)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className={styles.notificationModalBody}>
+              <p className={styles.notificationModalMessage}>{selectedNotification.message}</p>
+              <div className={styles.notificationModalTime}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12,6 12,12 16,14" />
+                </svg>
+                {formatNotificationTime(selectedNotification.created_at)}
+              </div>
+            </div>
+            <div className={styles.notificationModalFooter}>
+              <button className={styles.notificationModalBtn} onClick={() => setSelectedNotification(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

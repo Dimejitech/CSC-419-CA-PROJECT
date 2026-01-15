@@ -51,6 +51,11 @@ export class ClinicalService {
             },
             patient_notes_soap: true,
             patient_prescriptions: true,
+            lab_orders: {
+              include: {
+                lab_test_items: true,
+              },
+            },
           },
           orderBy: {
             date: 'desc',
@@ -68,51 +73,55 @@ export class ClinicalService {
 
   /**
  * Search patients by name, email, or phone
+ * Returns all patients if no query provided
  */
 async searchPatients(query: string) {
-  if (!query || query.trim().length === 0) {
-    return [];
+  const searchTerm = query?.trim().toLowerCase();
+
+  // Build base filter for patients only
+  const whereClause: any = {
+    roles: {
+      is: {
+        name: 'Patient',
+      },
+    },
+  };
+
+  // Only add search filter if query is provided
+  if (searchTerm && searchTerm.length > 0) {
+    whereClause.AND = [
+      {
+        OR: [
+          {
+            first_name: {
+              contains: searchTerm,
+              mode: 'insensitive',
+            },
+          },
+          {
+            last_name: {
+              contains: searchTerm,
+              mode: 'insensitive',
+            },
+          },
+          {
+            email: {
+              contains: searchTerm,
+              mode: 'insensitive',
+            },
+          },
+          {
+            phone_number: {
+              contains: searchTerm,
+            },
+          },
+        ],
+      },
+    ];
   }
 
-  const searchTerm = query.trim().toLowerCase();
-
   const patients = await this.prisma.users.findMany({
-    where: {
-      AND: [
-        {
-          roles: {
-            name: 'Patient',
-          },
-        },
-        {
-          OR: [
-            {
-              first_name: {
-                contains: searchTerm,
-                mode: 'insensitive',
-              },
-            },
-            {
-              last_name: {
-                contains: searchTerm,
-                mode: 'insensitive',
-              },
-            },
-            {
-              email: {
-                contains: searchTerm,
-                mode: 'insensitive',
-              },
-            },
-            {
-              phone_number: {
-                contains: searchTerm,
-              },
-            },
-          ],
-        },
-      ],
-    },
+    where: whereClause,
     select: {
       id: true,
       first_name: true,
@@ -127,7 +136,10 @@ async searchPatients(query: string) {
         },
       },
     },
-    take: 20, // Limit results
+    take: 50, // Limit results
+    orderBy: {
+      first_name: 'asc',
+    },
   });
 
   return patients;
@@ -192,8 +204,27 @@ async updateChart(patientId: string, updateChartDto: UpdateChartDto) {
     where: { patient_id: patientId },
   });
 
+  // If chart doesn't exist, create it (upsert behavior)
   if (!chart) {
-    throw new NotFoundException(`Chart not found for patient ID: ${patientId}`);
+    const newChart = await this.prisma.patient_charts.create({
+      data: {
+        patient_id: patientId,
+        blood_type: updateChartDto.bloodType,
+        dob: updateChartDto.dob ? new Date(updateChartDto.dob) : new Date('1990-01-01'),
+      },
+      include: {
+        users: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            email: true,
+          },
+        },
+        patient_allergies: true,
+      },
+    });
+    return newChart;
   }
 
   const updatedChart = await this.prisma.patient_charts.update({
