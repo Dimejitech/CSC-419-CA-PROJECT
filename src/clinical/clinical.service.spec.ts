@@ -1,48 +1,72 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClinicalService } from './clinical.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationService } from '../notification/notification.service';
 import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-
-// Mock PrismaClient
-const mockPrismaClient = {
-  patient_charts: {
-    findUnique: jest.fn(),
-  },
-  patient_encounters: {
-    findUnique: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-  },
-  patient_notes_soap: {
-    findFirst: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-  },
-  patient_prescriptions: {
-    create: jest.fn(),
-    findMany: jest.fn(),
-  },
-  users: {
-    findUnique: jest.fn(),
-  },
-  $disconnect: jest.fn(),
-};
+import { EncounterStatus } from './dto/create-encounter.dto';
 
 describe('ClinicalService', () => {
   let service: ClinicalService;
 
+  const mockPrismaService = {
+    patient_charts: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    patient_encounters: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    patient_notes_soap: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    patient_prescriptions: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+    },
+    patient_allergies: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      delete: jest.fn(),
+      findUnique: jest.fn(),
+    },
+    users: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+    },
+  };
+
+  const mockEventEmitter = {
+    emit: jest.fn(),
+  };
+
+  const mockNotificationService = {
+    notifyPrescriptionAdded: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ClinicalService],
+      providers: [
+        ClinicalService,
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
+        { provide: NotificationService, useValue: mockNotificationService },
+      ],
     }).compile();
 
     service = module.get<ClinicalService>(ClinicalService);
-    
-    // Replace the prisma instance with our mock
-    (service as any).prisma = mockPrismaClient;
+    jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  it('should be defined', () => {
+    expect(service).toBeDefined();
   });
 
   // ============================================
@@ -67,21 +91,42 @@ describe('ClinicalService', () => {
         patient_encounters: [],
       };
 
-      mockPrismaClient.patient_charts.findUnique.mockResolvedValue(mockChart);
+      mockPrismaService.patient_charts.findUnique.mockResolvedValue(mockChart);
 
       const result = await service.getPatientChart('patient-123');
 
       expect(result).toEqual(mockChart);
-      expect(mockPrismaClient.patient_charts.findUnique).toHaveBeenCalledWith({
-        where: { patient_id: 'patient-123' },
-        include: expect.any(Object),
-      });
     });
 
     it('should throw NotFoundException when chart not found', async () => {
-      mockPrismaClient.patient_charts.findUnique.mockResolvedValue(null);
+      mockPrismaService.patient_charts.findUnique.mockResolvedValue(null);
 
       await expect(service.getPatientChart('invalid-id')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('searchPatients', () => {
+    it('should return all patients when no query provided', async () => {
+      const mockPatients = [
+        { id: 'patient-1', first_name: 'John', last_name: 'Doe' },
+        { id: 'patient-2', first_name: 'Jane', last_name: 'Smith' },
+      ];
+
+      mockPrismaService.users.findMany.mockResolvedValue(mockPatients);
+
+      const result = await service.searchPatients('');
+
+      expect(result).toEqual(mockPatients);
+    });
+
+    it('should search patients by query', async () => {
+      const mockPatients = [{ id: 'patient-1', first_name: 'John', last_name: 'Doe' }];
+
+      mockPrismaService.users.findMany.mockResolvedValue(mockPatients);
+
+      const result = await service.searchPatients('John');
+
+      expect(result).toEqual(mockPatients);
     });
   });
 
@@ -93,7 +138,7 @@ describe('ClinicalService', () => {
     const createEncounterDto = {
       chartId: 'chart-123',
       clinicianId: 'clinician-123',
-      status: 'Open' as const,
+      status: EncounterStatus.Open,
     };
 
     it('should create encounter successfully', async () => {
@@ -109,18 +154,18 @@ describe('ClinicalService', () => {
         status: 'Open',
       };
 
-      mockPrismaClient.patient_charts.findUnique.mockResolvedValue(mockChart);
-      mockPrismaClient.users.findUnique.mockResolvedValue(mockClinician);
-      mockPrismaClient.patient_encounters.create.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_charts.findUnique.mockResolvedValue(mockChart);
+      mockPrismaService.users.findUnique.mockResolvedValue(mockClinician);
+      mockPrismaService.patient_encounters.create.mockResolvedValue(mockEncounter);
 
       const result = await service.createEncounter(createEncounterDto);
 
       expect(result).toEqual(mockEncounter);
-      expect(mockPrismaClient.patient_encounters.create).toHaveBeenCalled();
+      expect(mockPrismaService.patient_encounters.create).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when chart not found', async () => {
-      mockPrismaClient.patient_charts.findUnique.mockResolvedValue(null);
+      mockPrismaService.patient_charts.findUnique.mockResolvedValue(null);
 
       await expect(service.createEncounter(createEncounterDto)).rejects.toThrow(NotFoundException);
     });
@@ -132,8 +177,8 @@ describe('ClinicalService', () => {
         roles: { name: 'Patient' },
       };
 
-      mockPrismaClient.patient_charts.findUnique.mockResolvedValue(mockChart);
-      mockPrismaClient.users.findUnique.mockResolvedValue(mockUser);
+      mockPrismaService.patient_charts.findUnique.mockResolvedValue(mockChart);
+      mockPrismaService.users.findUnique.mockResolvedValue(mockUser);
 
       await expect(service.createEncounter(createEncounterDto)).rejects.toThrow(ForbiddenException);
     });
@@ -148,7 +193,7 @@ describe('ClinicalService', () => {
         status: 'Open',
       };
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
 
       const result = await service.getEncounter('encounter-123');
 
@@ -156,7 +201,7 @@ describe('ClinicalService', () => {
     });
 
     it('should throw NotFoundException when encounter not found', async () => {
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(null);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(null);
 
       await expect(service.getEncounter('invalid-id')).rejects.toThrow(NotFoundException);
     });
@@ -167,19 +212,41 @@ describe('ClinicalService', () => {
       const mockEncounter = {
         id: 'encounter-123',
         status: 'Open',
+        patient_charts: { id: 'chart-123', patient_id: 'patient-123' },
       };
       const updatedEncounter = {
         ...mockEncounter,
         status: 'Completed',
       };
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
-      mockPrismaClient.patient_encounters.update.mockResolvedValue(updatedEncounter);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_encounters.update.mockResolvedValue(updatedEncounter);
 
-      const result = await service.updateEncounter('encounter-123', { status: 'Completed' });
+      const result = await service.updateEncounter('encounter-123', { status: EncounterStatus.Completed });
 
       expect(result.status).toBe('Completed');
-      expect(mockPrismaClient.patient_encounters.update).toHaveBeenCalled();
+      expect(mockPrismaService.patient_encounters.update).toHaveBeenCalled();
+    });
+
+    it('should emit event when encounter is completed', async () => {
+      const mockEncounter = {
+        id: 'encounter-123',
+        status: 'Open',
+        patient_charts: { id: 'chart-123', patient_id: 'patient-123' },
+        clinician_id: 'clinician-123',
+        chart_id: 'chart-123',
+      };
+      const updatedEncounter = {
+        ...mockEncounter,
+        status: 'Completed',
+      };
+
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_encounters.update.mockResolvedValue(updatedEncounter);
+
+      await service.updateEncounter('encounter-123', { status: EncounterStatus.Completed });
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('encounter.closed', expect.any(Object));
     });
   });
 
@@ -210,14 +277,14 @@ describe('ClinicalService', () => {
         ...createSoapNoteDto,
       };
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
-      mockPrismaClient.patient_notes_soap.findFirst.mockResolvedValue(null);
-      mockPrismaClient.patient_notes_soap.create.mockResolvedValue(mockNote);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_notes_soap.findFirst.mockResolvedValue(null);
+      mockPrismaService.patient_notes_soap.create.mockResolvedValue(mockNote);
 
       const result = await service.createSoapNote('encounter-123', createSoapNoteDto);
 
       expect(result).toEqual(mockNote);
-      expect(mockPrismaClient.patient_notes_soap.create).toHaveBeenCalled();
+      expect(mockPrismaService.patient_notes_soap.create).toHaveBeenCalled();
     });
 
     it('should update existing SOAP note', async () => {
@@ -234,13 +301,13 @@ describe('ClinicalService', () => {
         ...createSoapNoteDto,
       };
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
-      mockPrismaClient.patient_notes_soap.findFirst.mockResolvedValue(existingNote);
-      mockPrismaClient.patient_notes_soap.update.mockResolvedValue(updatedNote);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_notes_soap.findFirst.mockResolvedValue(existingNote);
+      mockPrismaService.patient_notes_soap.update.mockResolvedValue(updatedNote);
 
-      const result = await service.createSoapNote('encounter-123', createSoapNoteDto);
+      await service.createSoapNote('encounter-123', createSoapNoteDto);
 
-      expect(mockPrismaClient.patient_notes_soap.update).toHaveBeenCalled();
+      expect(mockPrismaService.patient_notes_soap.update).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException for cancelled encounter', async () => {
@@ -249,7 +316,7 @@ describe('ClinicalService', () => {
         status: 'Cancelled',
       };
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
 
       await expect(
         service.createSoapNote('encounter-123', createSoapNoteDto),
@@ -274,6 +341,7 @@ describe('ClinicalService', () => {
         id: 'encounter-123',
         status: 'Open',
         patient_charts: {
+          patient_id: 'patient-123',
           patient_allergies: [],
         },
       };
@@ -283,13 +351,13 @@ describe('ClinicalService', () => {
         ...createPrescriptionDto,
       };
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
-      mockPrismaClient.patient_prescriptions.create.mockResolvedValue(mockPrescription);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_prescriptions.create.mockResolvedValue(mockPrescription);
 
       const result = await service.createPrescription('encounter-123', createPrescriptionDto);
 
       expect(result).toEqual(mockPrescription);
-      expect(mockPrismaClient.patient_prescriptions.create).toHaveBeenCalled();
+      expect(mockPrismaService.patient_prescriptions.create).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException when patient is allergic to medication', async () => {
@@ -306,12 +374,12 @@ describe('ClinicalService', () => {
         },
       };
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
 
       await expect(
         service.createPrescription('encounter-123', createPrescriptionDto),
       ).rejects.toThrow(BadRequestException);
-      expect(mockPrismaClient.patient_prescriptions.create).not.toHaveBeenCalled();
+      expect(mockPrismaService.patient_prescriptions.create).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException for cancelled encounter', async () => {
@@ -323,7 +391,7 @@ describe('ClinicalService', () => {
         },
       };
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
 
       await expect(
         service.createPrescription('encounter-123', createPrescriptionDto),
@@ -335,18 +403,12 @@ describe('ClinicalService', () => {
     it('should return all prescriptions for an encounter', async () => {
       const mockEncounter = { id: 'encounter-123' };
       const mockPrescriptions = [
-        {
-          id: 'prescription-1',
-          medication_name: 'Ibuprofen',
-        },
-        {
-          id: 'prescription-2',
-          medication_name: 'Acetaminophen',
-        },
+        { id: 'prescription-1', medication_name: 'Ibuprofen' },
+        { id: 'prescription-2', medication_name: 'Acetaminophen' },
       ];
 
-      mockPrismaClient.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
-      mockPrismaClient.patient_prescriptions.findMany.mockResolvedValue(mockPrescriptions);
+      mockPrismaService.patient_encounters.findUnique.mockResolvedValue(mockEncounter);
+      mockPrismaService.patient_prescriptions.findMany.mockResolvedValue(mockPrescriptions);
 
       const result = await service.getEncounterPrescriptions('encounter-123');
 

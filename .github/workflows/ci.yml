@@ -78,11 +78,10 @@ jobs:
       - name: Build Backend
         run: npm run build
 
-      # Unit tests skipped - tests are outdated and need refactoring
-      # - name: Run Unit Tests
-      #   run: npm run test
-      #   env:
-      #     NODE_ENV: test
+      - name: Run Unit Tests
+        run: npm run test
+        env:
+          NODE_ENV: test
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
